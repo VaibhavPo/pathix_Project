@@ -142,6 +142,64 @@
       dragType = null;
     });
 
+    // --- Touch support for mobile drag-and-drop ---
+    let touchLandmark = null;
+    let touchType = null;
+    let touchMoveHandler = null;
+    let touchEndHandler = null;
+
+    palette.addEventListener('touchstart', function(e) {
+      const target = e.target.closest('.landmark-icon');
+      if (!target) return;
+      e.preventDefault();
+      touchType = target.getAttribute('data-type');
+      // Create a floating emoji
+      touchLandmark = document.createElement('div');
+      touchLandmark.textContent = target.textContent;
+      touchLandmark.style.position = 'fixed';
+      touchLandmark.style.fontSize = '32px';
+      touchLandmark.style.pointerEvents = 'none';
+      touchLandmark.style.zIndex = 9999;
+      document.body.appendChild(touchLandmark);
+
+      function moveTouchLandmark(touch) {
+        touchLandmark.style.left = (touch.clientX - 16) + 'px';
+        touchLandmark.style.top = (touch.clientY - 16) + 'px';
+      }
+
+      touchMoveHandler = function(ev) {
+        if (ev.touches.length > 0) {
+          moveTouchLandmark(ev.touches[0]);
+        }
+      };
+      touchEndHandler = function(ev) {
+        if (touchLandmark) {
+          document.body.removeChild(touchLandmark);
+          touchLandmark = null;
+        }
+        if (touchType && ev.changedTouches && ev.changedTouches.length > 0) {
+          // Drop on map if finger is over the canvas
+          const touch = ev.changedTouches[0];
+          const rect = container.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+          if (
+            touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom
+          ) {
+            addLandmark(touchType, x, y);
+          }
+        }
+        touchType = null;
+        window.removeEventListener('touchmove', touchMoveHandler);
+        window.removeEventListener('touchend', touchEndHandler);
+      };
+      window.addEventListener('touchmove', touchMoveHandler);
+      window.addEventListener('touchend', touchEndHandler);
+      // Place at initial touch
+      if (e.touches.length > 0) moveTouchLandmark(e.touches[0]);
+    }, { passive: false });
+
     function addLandmark(type, x, y) {
       const emoji = landmarkEmojis[type] || '❓';
       const text = new Konva.Text({
