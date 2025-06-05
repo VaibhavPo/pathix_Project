@@ -6,26 +6,34 @@
   <title>Simple Map Editor</title>
   <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
   <style>
+    :root {
+      --bg: #fefae0;
+      --primary: #faedcd;
+      --accent: #d4a373;
+      --text: #3c2f2f;
+      --neutral1: #b08968;
+      --neutral2: #e6ccb2;
+    }
     body {
       font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #e0e7ff 0%, #f0f0f0 100%);
+      background: var(--bg);
       min-height: 100vh;
+      color: var(--text);
     }
     #toolbar {
-      background: rgba(255,255,255,0.82);
+      background: var(--primary);
       padding: 14px 12px 10px 12px;
       display: flex;
       align-items: center;
       gap: 18px;
       border-radius: 18px;
-      box-shadow: 0 4px 24px rgba(60,60,120,0.10);
+      box-shadow: 0 4px 24px var(--neutral2);
       max-width: 98vw;
       width: 900px;
       margin: 24px auto 0 auto;
-      backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(180,180,220,0.13);
+      border: 1.5px solid var(--neutral2);
       flex-wrap: wrap;
       position: relative;
     }
@@ -33,20 +41,20 @@
       display: flex;
       gap: 10px;
       overflow-x: auto;
-      background: rgba(240,245,255,0.7);
+      background: var(--neutral2);
       border-radius: 10px;
       padding: 4px 8px;
       max-width: 340px;
       min-width: 120px;
       scrollbar-width: thin;
-      scrollbar-color: #b6c6e6 #f0f0f0;
+      scrollbar-color: var(--neutral1) var(--neutral2);
     }
     #landmark-palette::-webkit-scrollbar {
       height: 6px;
-      background: #f0f0f0;
+      background: var(--neutral2);
     }
     #landmark-palette::-webkit-scrollbar-thumb {
-      background: #b6c6e6;
+      background: var(--neutral1);
       border-radius: 4px;
     }
     .landmark-icon {
@@ -56,19 +64,22 @@
       border-radius: 8px;
       padding: 2px 4px;
       transition: background 0.15s, box-shadow 0.15s;
-      box-shadow: 0 1px 4px #1d4ed820;
+      box-shadow: 0 1px 4px var(--neutral2);
+      color: var(--text);
+      background: var(--primary);
     }
     .landmark-icon:active, .landmark-icon:focus {
-      background: #e0e7ff;
-      box-shadow: 0 2px 8px #1d4ed840;
+      background: var(--accent);
+      box-shadow: 0 2px 8px var(--neutral1);
+      color: #fff;
     }
     #container {
       margin: 18px auto 24px auto;
       display: block;
-      background: rgba(255,255,255,0.85);
+      background: var(--primary);
       border-radius: 20px;
-      border: 1.5px solid #e0e7ff;
-      box-shadow: 0 4px 24px rgba(60,60,120,0.10);
+      border: 1.5px solid var(--neutral2);
+      box-shadow: 0 4px 24px var(--neutral2);
       max-width: 900px;
       width: 98vw;
       aspect-ratio: 16/9;
@@ -82,31 +93,33 @@
     select, button {
       font-size: 1em;
       border-radius: 8px;
-      border: 1.5px solid #d1d5db;
+      border: 1.5px solid var(--neutral2);
       padding: 6px 12px;
-      background: #f9fafb;
-      color: #222;
-      box-shadow: 0 1px 4px #1d4ed810;
-      transition: border 0.2s, box-shadow 0.2s;
+      background: var(--accent);
+      color: var(--text);
+      box-shadow: 0 1px 4px var(--neutral2);
+      transition: border 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
       outline: none;
       margin-right: 2px;
     }
     select:focus, button:focus {
-      border: 1.5px solid #38bdf8;
-      box-shadow: 0 2px 8px #1d4ed840;
+      border: 1.5px solid var(--neutral1);
+      box-shadow: 0 2px 8px var(--neutral1);
+      background: var(--neutral2);
+      color: var(--text);
     }
     button {
       cursor: pointer;
       font-weight: 500;
-      background: linear-gradient(90deg, #e0e7ff 0%, #38bdf8 100%);
-      color: #1d4ed8;
+      background: var(--accent);
+      color: #fff;
       border: none;
       margin-left: 2px;
       margin-right: 2px;
     }
     button:active {
-      background: #e0e7ff;
-      color: #222;
+      background: var(--neutral1);
+      color: #fff;
     }
     @media (max-width: 900px) {
       #toolbar, #container {

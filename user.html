@@ -6,34 +6,42 @@
   <title>Property Map Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
   <style>
+    :root {
+      --bg: #fefae0;
+      --primary: #faedcd;
+      --accent: #d4a373;
+      --text: #3c2f2f;
+      --neutral1: #b08968;
+      --neutral2: #e6ccb2;
+    }
     body {
       font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #e0e7ff 0%, #f0f0f0 100%);
+      background: var(--bg);
       min-height: 100vh;
+      color: var(--text);
     }
     #info {
       margin: 24px auto 0 auto;
       max-width: 95vw;
       width: 420px;
-      background: rgba(255,255,255,0.75);
+      background: var(--primary);
       border-radius: 22px;
-      box-shadow: 0 8px 32px rgba(60,60,120,0.18);
-      color: #222;
+      box-shadow: 0 8px 32px var(--neutral2);
+      color: var(--text);
       padding: 24px 18px 12px 18px;
       text-align: center;
-      backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(180,180,220,0.18);
+      border: 1.5px solid var(--neutral2);
       transition: box-shadow 0.3s;
     }
     #container {
       margin: 18px auto 24px auto;
       display: block;
-      background: rgba(255,255,255,0.85);
+      background: var(--primary);
       border-radius: 20px;
-      border: 1.5px solid #e0e7ff;
-      box-shadow: 0 4px 24px rgba(60,60,120,0.10);
+      border: 1.5px solid var(--neutral2);
+      box-shadow: 0 4px 24px var(--neutral2);
       max-width: 500px;
       width: 100%;
       aspect-ratio: 4/3;
@@ -58,8 +66,8 @@
       letter-spacing: 0.01em;
       min-height: 38px;
       border-radius: 12px;
-      background: linear-gradient(90deg, #1d4ed8 0%, #38bdf8 100%);
-      box-shadow: 0 2px 8px rgba(30,64,175,0.08);
+      background: var(--accent);
+      box-shadow: 0 2px 8px var(--neutral2);
       padding: 7px 0 7px 0;
       transition: background 0.3s, color 0.3s;
       gap: 10px;
@@ -75,27 +83,27 @@
     .nav-icon {
       font-size: 1.5em;
       margin-right: 2px;
-      filter: drop-shadow(0 1px 2px #1d4ed880);
+      filter: drop-shadow(0 1px 2px var(--accent));
       transition: transform 0.2s;
     }
     #marker-size-slider {
       width: 120px;
-      accent-color: #1d4ed8;
+      accent-color: var(--accent);
       margin: 0 8px;
       vertical-align: middle;
       border-radius: 8px;
-      background: linear-gradient(90deg, #e0e7ff 0%, #38bdf8 100%);
-      box-shadow: 0 1px 4px #1d4ed820;
+      background: var(--neutral2);
+      box-shadow: 0 1px 4px var(--neutral2);
       height: 4px;
       outline: none;
       transition: box-shadow 0.2s;
     }
     #marker-size-slider:active {
-      box-shadow: 0 2px 8px #1d4ed840;
+      box-shadow: 0 2px 8px var(--neutral1);
     }
     #status {
       font-size: 1em;
-      color: #666;
+      color: var(--neutral1);
       margin-top: 12px;
       letter-spacing: 0.01em;
     }
@@ -103,15 +111,15 @@
       margin: 8px 0 10px 0;
       font-size: 1em;
       border-radius: 8px;
-      border: 1.5px solid #d1d5db;
+      border: 1.5px solid var(--neutral2);
       padding: 6px 10px;
-      background: #f9fafb;
-      color: #222;
-      box-shadow: 0 1px 4px #1d4ed810;
+      background: var(--neutral2);
+      color: var(--text);
+      box-shadow: 0 1px 4px var(--neutral2);
       transition: border 0.2s;
     }
     input[type="file"]:focus {
-      border: 1.5px solid #38bdf8;
+      border: 1.5px solid var(--accent);
     }
     @media (max-width: 600px) {
       #info, #container {
