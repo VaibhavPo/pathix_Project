@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
       margin: 0;
       padding: 0;
       background: linear-gradient(135deg, #e0e7ff 0%, #f0f0f0 100%);
@@ -17,20 +17,23 @@
       margin: 24px auto 0 auto;
       max-width: 95vw;
       width: 420px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(60,60,120,0.10);
+      background: rgba(255,255,255,0.75);
+      border-radius: 22px;
+      box-shadow: 0 8px 32px rgba(60,60,120,0.18);
       color: #222;
-      padding: 20px 18px 10px 18px;
+      padding: 24px 18px 12px 18px;
       text-align: center;
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(180,180,220,0.18);
+      transition: box-shadow 0.3s;
     }
     #container {
       margin: 18px auto 24px auto;
       display: block;
-      background: #fff;
-      border-radius: 16px;
-      border: 1px solid #d1d5db;
-      box-shadow: 0 2px 12px rgba(60,60,120,0.07);
+      background: rgba(255,255,255,0.85);
+      border-radius: 20px;
+      border: 1.5px solid #e0e7ff;
+      box-shadow: 0 4px 24px rgba(60,60,120,0.10);
       max-width: 500px;
       width: 100%;
       aspect-ratio: 4/3;
@@ -39,40 +42,83 @@
       touch-action: none;
       position: relative;
       overflow: hidden;
+      transition: box-shadow 0.3s;
+    }
+    #container:active, #container:focus-within, #info:active, #info:focus-within {
+      box-shadow: 0 8px 32px rgba(60,60,120,0.22);
     }
     #nav-instruction {
-      font-size: 1.1em;
-      font-weight: bold;
-      color: #1d4ed8;
-      margin: 10px 0 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.18em;
+      font-weight: 600;
+      color: #fff;
+      margin: 14px 0 10px 0;
       letter-spacing: 0.01em;
+      min-height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #1d4ed8 0%, #38bdf8 100%);
+      box-shadow: 0 2px 8px rgba(30,64,175,0.08);
+      padding: 7px 0 7px 0;
+      transition: background 0.3s, color 0.3s;
+      gap: 10px;
+      user-select: none;
+      min-width: 120px;
+      max-width: 100vw;
+      animation: fadeInNav 0.7s;
+    }
+    @keyframes fadeInNav {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .nav-icon {
+      font-size: 1.5em;
+      margin-right: 2px;
+      filter: drop-shadow(0 1px 2px #1d4ed880);
+      transition: transform 0.2s;
     }
     #marker-size-slider {
       width: 120px;
       accent-color: #1d4ed8;
       margin: 0 8px;
       vertical-align: middle;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #e0e7ff 0%, #38bdf8 100%);
+      box-shadow: 0 1px 4px #1d4ed820;
+      height: 4px;
+      outline: none;
+      transition: box-shadow 0.2s;
+    }
+    #marker-size-slider:active {
+      box-shadow: 0 2px 8px #1d4ed840;
     }
     #status {
-      font-size: 0.98em;
+      font-size: 1em;
       color: #666;
-      margin-top: 10px;
+      margin-top: 12px;
+      letter-spacing: 0.01em;
     }
     input[type="file"] {
       margin: 8px 0 10px 0;
       font-size: 1em;
-      border-radius: 6px;
-      border: 1px solid #d1d5db;
-      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1.5px solid #d1d5db;
+      padding: 6px 10px;
       background: #f9fafb;
       color: #222;
+      box-shadow: 0 1px 4px #1d4ed810;
+      transition: border 0.2s;
+    }
+    input[type="file"]:focus {
+      border: 1.5px solid #38bdf8;
     }
     @media (max-width: 600px) {
       #info, #container {
         width: 98vw;
         min-width: 0;
         max-width: 100vw;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 10px 2vw 8px 2vw;
       }
       #container {
@@ -82,6 +128,8 @@
       }
       #nav-instruction {
         font-size: 1em;
+        min-height: 32px;
+        padding: 5px 0;
       }
       #marker-size-slider {
         width: 80px;
@@ -450,13 +498,19 @@
     let prevUserPos = null;
     function updateNavigation(userLat, userLng) {
       const route = mapData.route;
+      const navDiv = document.getElementById('nav-instruction');
       if (!route || route.length < 2) {
-        document.getElementById('nav-instruction').textContent = '';
+        navDiv.innerHTML = '';
         return;
       }
       const userPos = { lat: userLat, lng: userLng };
       const instruction = getTurnInstruction(userPos, prevUserPos, route);
-      document.getElementById('nav-instruction').textContent = instruction;
+      let icon = '';
+      if (instruction === 'Go straight') icon = '<span class="nav-icon">⬆️</span>';
+      else if (instruction === 'Turn left') icon = '<span class="nav-icon">⬅️</span>';
+      else if (instruction === 'Turn right') icon = '<span class="nav-icon">➡️</span>';
+      else icon = '<span class="nav-icon">🧭</span>';
+      navDiv.innerHTML = icon + '<span>' + instruction + '</span>';
       prevUserPos = userPos;
     }
 
