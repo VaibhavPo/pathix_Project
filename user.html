@@ -81,22 +81,27 @@
     }
 
     // Draw roads
-    mapData.roads.forEach(road => {
-      if (road.points.length < 2) return;
-      const points = road.points.map(pt => {
-        const c = latLngToCanvas(pt.lat, pt.lng);
-        return [c.x, c.y];
-      }).flat();
-      const line = new Konva.Line({
-        points,
-        stroke: '#374151',
-        strokeWidth: 8,
-        lineCap: 'round',
-        lineJoin: 'round',
+    const baseRoadWidth = 8;
+    function drawRoads() {
+      roadLayer.destroyChildren();
+      mapData.roads.forEach(road => {
+        if (road.points.length < 2) return;
+        const points = road.points.map(pt => {
+          const c = latLngToCanvas(pt.lat, pt.lng);
+          return [c.x, c.y];
+        }).flat();
+        const line = new Konva.Line({
+          points,
+          stroke: '#374151',
+          strokeWidth: baseRoadWidth / stage.scaleX(),
+          lineCap: 'round',
+          lineJoin: 'round',
+        });
+        roadLayer.add(line);
       });
-      roadLayer.add(line);
-    });
-    roadLayer.draw();
+      roadLayer.draw();
+    }
+    drawRoads();
 
     // Draw landmarks
     mapData.landmarks.forEach(lm => {
@@ -116,13 +121,15 @@
     landmarkLayer.draw();
 
     // User marker
+    const baseMarkerRadius = 12;
     const userMarker = new Konva.Circle({
-      x: width/2, y: height/2, radius: 12, fill: '#1d4ed8', stroke: '#fff', strokeWidth: 3, visible: false
+      x: width/2, y: height/2, radius: baseMarkerRadius, fill: '#1d4ed8', stroke: '#fff', strokeWidth: 3, visible: false
     });
     userLayer.add(userMarker);
     userLayer.draw();
 
     // Draw route if present
+    const baseRouteWidth = 5;
     function drawRoute() {
       routeLayer.destroyChildren();
       if (Array.isArray(mapData.route) && mapData.route.length > 1) {
@@ -133,7 +140,7 @@
         const line = new Konva.Line({
           points,
           stroke: '#f59e42',
-          strokeWidth: 5,
+          strokeWidth: baseRouteWidth / stage.scaleX(),
           lineCap: 'round',
           lineJoin: 'round',
           dash: [10, 8],
@@ -192,22 +199,7 @@
           mapData.landmarks = data.landmarks;
           mapData.route = data.route || [];
           // Redraw roads
-          mapData.roads.forEach(road => {
-            if (road.points.length < 2) return;
-            const points = road.points.map(pt => {
-              const c = latLngToCanvas(pt.lat, pt.lng);
-              return [c.x, c.y];
-            }).flat();
-            const line = new Konva.Line({
-              points,
-              stroke: '#374151',
-              strokeWidth: 8,
-              lineCap: 'round',
-              lineJoin: 'round',
-            });
-            roadLayer.add(line);
-          });
-          roadLayer.draw();
+          drawRoads();
           // Redraw landmarks
           mapData.landmarks.forEach(lm => {
             const c = latLngToCanvas(lm.lat, lm.lng);
@@ -262,6 +254,7 @@
       };
       stage.position(newPos);
       stage.batchDraw();
+      updateScales();
     });
 
     // Pan with drag
@@ -316,6 +309,7 @@
             y: stage.y() + dy,
           });
           stage.batchDraw();
+          updateScales();
         }
         lastDist = dist;
         lastCenter = center;
@@ -376,6 +370,23 @@
       const instruction = getTurnInstruction(userPos, prevUserPos, route);
       document.getElementById('nav-instruction').textContent = instruction;
       prevUserPos = userPos;
+    }
+
+    // Update marker and road/route widths on zoom/pan
+    function updateScales() {
+      const scale = stage.scaleX();
+      userMarker.radius(baseMarkerRadius / scale);
+      // Update all road lines
+      roadLayer.getChildren().forEach(line => {
+        if (line.className === 'Line') line.strokeWidth(baseRoadWidth / scale);
+      });
+      // Update all route lines
+      routeLayer.getChildren().forEach(line => {
+        if (line.className === 'Line') line.strokeWidth(baseRouteWidth / scale);
+      });
+      roadLayer.batchDraw();
+      routeLayer.batchDraw();
+      userLayer.batchDraw();
     }
   </script>
 </body>
