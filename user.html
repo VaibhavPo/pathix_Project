@@ -199,6 +199,97 @@
       };
       reader.readAsText(file);
     });
+    // ... existing code ...
+    // --- Enable Zoom and Pan ---
+    let scaleBy = 1.1;
+    let minScale = 0.5;
+    let maxScale = 4;
+
+    // Zoom with mouse wheel
+    stage.container().addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const oldScale = stage.scaleX();
+      const pointer = stage.getPointerPosition();
+
+      let direction = e.deltaY > 0 ? -1 : 1;
+      let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+      newScale = Math.max(minScale, Math.min(maxScale, newScale));
+
+      // Calculate new position to keep pointer under mouse
+      const mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+      };
+
+      stage.scale({ x: newScale, y: newScale });
+
+      const newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+      stage.position(newPos);
+      stage.batchDraw();
+    });
+
+    // Pan with drag
+    let lastDist = null;
+    let lastCenter = null;
+
+    stage.on('mousedown touchstart', (e) => {
+      if (e.evt.touches && e.evt.touches.length === 2) {
+        // Pinch start
+        const [touch1, touch2] = e.evt.touches;
+        lastDist = Math.hypot(
+          touch1.clientX - touch2.clientX,
+          touch1.clientY - touch2.clientY
+        );
+        lastCenter = {
+          x: (touch1.clientX + touch2.clientX) / 2,
+          y: (touch1.clientY + touch2.clientY) / 2,
+        };
+      } else {
+        stage.draggable(true);
+      }
+    });
+
+    stage.on('mouseup touchend', (e) => {
+      stage.draggable(false);
+      lastDist = null;
+      lastCenter = null;
+    });
+
+    stage.on('touchmove', (e) => {
+      if (e.evt.touches && e.evt.touches.length === 2) {
+        // Pinch zoom
+        const [touch1, touch2] = e.evt.touches;
+        const dist = Math.hypot(
+          touch1.clientX - touch2.clientX,
+          touch1.clientY - touch2.clientY
+        );
+        const center = {
+          x: (touch1.clientX + touch2.clientX) / 2,
+          y: (touch1.clientY + touch2.clientY) / 2,
+        };
+        if (lastDist && lastCenter) {
+          let scale = stage.scaleX() * (dist / lastDist);
+          scale = Math.max(minScale, Math.min(maxScale, scale));
+          stage.scale({ x: scale, y: scale });
+
+          // Adjust position to keep center under fingers
+          const dx = center.x - lastCenter.x;
+          const dy = center.y - lastCenter.y;
+          stage.position({
+            x: stage.x() + dx,
+            y: stage.y() + dy,
+          });
+          stage.batchDraw();
+        }
+        lastDist = dist;
+        lastCenter = center;
+      }
+    });
+// ... existing code ...
+
   </script>
 </body>
 </html> 
