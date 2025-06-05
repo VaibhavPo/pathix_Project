@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Property Map Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
+    #container { margin: 30px auto; display: block; background: #fff; border: 1px solid #ccc; }
+    #info { margin: 20px auto; width: 800px; color: #444; }
+  </style>
+</head>
+<body>
+  <div id="info">
+    <h2>Property Map Tracker</h2>
+    <p>This map shows the property and your current location (if you allow GPS access).</p>
+    <input type="file" id="map-upload" accept="application/json" />
+    <p id="status">Waiting for GPS...</p>
+  </div>
+  <div id="container"></div>
+  <script>
+    // --- Paste your exported map data here ---
+    // Example structure:
+    const mapData = {
+      gpsOrigin: { lat: 28.6139, lng: 77.2090 }, // Set this to your map's origin
+      gpsScale: 10000, // Set this to your map's scale
+      roads: [
+        // Each road: { points: [ {lat, lng}, ... ] }
+        // Example: { points: [ {lat: 28.6139, lng: 77.2090}, {lat: 28.6140, lng: 77.2091} ] }
+      ],
+      landmarks: [
+        // Each landmark: { type: 'house', lat, lng }
+      ]
+    };
+    // --- End map data ---
+
+    // Emoji for landmarks
+    const landmarkEmojis = {
+      house: '🏠',
+      tree: '🌳',
+    };
+
+    // Konva setup
+    const width = 800;
+    const height = 500;
+    const stage = new Konva.Stage({
+      container: 'container',
+      width,
+      height,
+    });
+    const backgroundLayer = new Konva.Layer();
+    const roadLayer = new Konva.Layer();
+    const landmarkLayer = new Konva.Layer();
+    const userLayer = new Konva.Layer();
+    stage.add(backgroundLayer);
+    stage.add(roadLayer);
+    stage.add(landmarkLayer);
+    stage.add(userLayer);
+
+    // Draw background
+    const bgRect = new Konva.Rect({
+      x: 0, y: 0, width, height, fill: '#e0e7ff'
+    });
+    backgroundLayer.add(bgRect);
+    backgroundLayer.draw();
+
+    // Helper: lat/lng to canvas
+    function latLngToCanvas(lat, lng) {
+      const { gpsOrigin, gpsScale } = mapData;
+      if (!gpsOrigin) return {x: width/2, y: height/2};
+      const x = width/2 + (lng - gpsOrigin.lng) * gpsScale;
+      const y = height/2 - (lat - gpsOrigin.lat) * gpsScale;
+      return {x, y};
+    }
+
+    // Draw roads
+    mapData.roads.forEach(road => {
+      if (road.points.length < 2) return;
+      const points = road.points.map(pt => {
+        const c = latLngToCanvas(pt.lat, pt.lng);
+        return [c.x, c.y];
+      }).flat();
+      const line = new Konva.Line({
+        points,
+        stroke: '#374151',
+        strokeWidth: 8,
+        lineCap: 'round',
+        lineJoin: 'round',
+      });
+      roadLayer.add(line);
+    });
+    roadLayer.draw();
+
+    // Draw landmarks
+    mapData.landmarks.forEach(lm => {
+      const c = latLngToCanvas(lm.lat, lm.lng);
+      const text = new Konva.Text({
+        x: c.x - 16,
+        y: c.y - 16,
+        text: landmarkEmojis[lm.type] || '❓',
+        fontSize: 32,
+        shadowColor: '#000',
+        shadowBlur: 4,
+        shadowOffset: { x: 2, y: 2 },
+        shadowOpacity: 0.3,
+      });
+      landmarkLayer.add(text);
+    });
+    landmarkLayer.draw();
+
+    // User marker
+    const userMarker = new Konva.Circle({
+      x: width/2, y: height/2, radius: 12, fill: '#1d4ed8', stroke: '#fff', strokeWidth: 3, visible: false
+    });
+    userLayer.add(userMarker);
+    userLayer.draw();
+
+    // Track user position
+    function updateUserMarker(lat, lng) {
+      const c = latLngToCanvas(lat, lng);
+      userMarker.x(c.x);
+      userMarker.y(c.y);
+      userMarker.visible(true);
+      userLayer.batchDraw();
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(function(pos) {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        updateUserMarker(lat, lng);
+        document.getElementById('status').textContent = `Your position: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      }, function(err) {
+        document.getElementById('status').textContent = 'Unable to get your position: ' + err.message;
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000
+      });
+    } else {
+      document.getElementById('status').textContent = 'Geolocation is not supported by your browser.';
+    }
+
+    // --- Map Upload Functionality ---
+    document.getElementById('map-upload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (!data.gpsOrigin || !data.gpsScale || !Array.isArray(data.roads) || !Array.isArray(data.landmarks)) {
+            throw new Error('Invalid map data format.');
+          }
+          // Remove old map
+          roadLayer.destroyChildren();
+          landmarkLayer.destroyChildren();
+          // Update mapData
+          mapData.gpsOrigin = data.gpsOrigin;
+          mapData.gpsScale = data.gpsScale;
+          mapData.roads = data.roads;
+          mapData.landmarks = data.landmarks;
+          // Redraw roads
+          mapData.roads.forEach(road => {
+            if (road.points.length < 2) return;
+            const points = road.points.map(pt => {
+              const c = latLngToCanvas(pt.lat, pt.lng);
+              return [c.x, c.y];
+            }).flat();
+            const line = new Konva.Line({
+              points,
+              stroke: '#374151',
+              strokeWidth: 8,
+              lineCap: 'round',
+              lineJoin: 'round',
+            });
+            roadLayer.add(line);
+          });
+          roadLayer.draw();
+          // Redraw landmarks
+          mapData.landmarks.forEach(lm => {
+            const c = latLngToCanvas(lm.lat, lm.lng);
+            const text = new Konva.Text({
+              x: c.x - 16,
+              y: c.y - 16,
+              text: landmarkEmojis[lm.type] || '❓',
+              fontSize: 32,
+              shadowColor: '#000',
+              shadowBlur: 4,
+              shadowOffset: { x: 2, y: 2 },
+              shadowOpacity: 0.3,
+            });
+            landmarkLayer.add(text);
+          });
+          landmarkLayer.draw();
+        } catch (err) {
+          alert('Failed to load map: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html> 

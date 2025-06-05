@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Map Editor</title>
+  <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
+    #toolbar { background: #fff; padding: 10px; display: flex; align-items: center; gap: 20px; }
+    #landmark-palette { display: flex; gap: 10px; }
+    .landmark-icon { font-size: 32px; cursor: grab; user-select: none; }
+    #container { margin: 20px auto; display: block; background: #fff; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <label for="theme-select">Theme:</label>
+    <select id="theme-select">
+      <option value="classic">Classic</option>
+      <option value="night">Night</option>
+    </select>
+    <div id="landmark-palette">
+      <span class="landmark-icon" draggable="true" data-type="house">🏠</span>
+      <span class="landmark-icon" draggable="true" data-type="tree">🌳</span>
+    </div>
+    <button id="start-gps">Start GPS Tracking</button>
+    <button id="stop-gps" disabled>Stop GPS Tracking</button>
+    <button id="start-gps-sim">Start GPS Simulation</button>
+    <button id="stop-gps-sim" disabled>Stop GPS Simulation</button>
+    <button id="export-map">Export Map</button>
+    <span style="margin-left:auto; color:#888;">Draw roads by dragging on the map, or use GPS. Drag icons onto the map.</span>
+  </div>
+  <div id="container"></div>
+
+  <script>
+    // Theme definitions
+    const themes = {
+      classic: {
+        background: '#e0e7ff',
+        roadColor: '#374151',
+      },
+      night: {
+        background: '#232946',
+        roadColor: '#eebbc3',
+      },
+    };
+
+    // Landmark emoji mapping
+    const landmarkEmojis = {
+      house: '🏠',
+      tree: '🌳',
+    };
+
+    // Konva setup
+    const width = 800;
+    const height = 500;
+    const stage = new Konva.Stage({
+      container: 'container',
+      width,
+      height,
+    });
+    const backgroundLayer = new Konva.Layer();
+    const roadLayer = new Konva.Layer();
+    const landmarkLayer = new Konva.Layer();
+    stage.add(backgroundLayer);
+    stage.add(roadLayer);
+    stage.add(landmarkLayer);
+
+    // Draw background rect
+    const bgRect = new Konva.Rect({
+      x: 0, y: 0, width, height, fill: themes.classic.background
+    });
+    backgroundLayer.add(bgRect);
+    backgroundLayer.draw();
+
+    // Handle theme change
+    document.getElementById('theme-select').addEventListener('change', (e) => {
+      const theme = themes[e.target.value];
+      bgRect.fill(theme.background);
+      backgroundLayer.draw();
+    });
+
+    // Road drawing
+    let isDrawing = false;
+    let currentLine = null;
+    let currentTheme = 'classic';
+
+    stage.on('mousedown touchstart', (e) => {
+      // Only draw on empty space
+      if (e.target !== stage) return;
+      isDrawing = true;
+      const pos = stage.getPointerPosition();
+      const theme = themes[document.getElementById('theme-select').value];
+      currentLine = new Konva.Line({
+        stroke: theme.roadColor,
+        strokeWidth: 8,
+        points: [pos.x, pos.y],
+        lineCap: 'round',
+        lineJoin: 'round',
+      });
+      roadLayer.add(currentLine);
+    });
+
+    stage.on('mousemove touchmove', (e) => {
+      if (!isDrawing || !currentLine) return;
+      const pos = stage.getPointerPosition();
+      const newPoints = currentLine.points().concat([pos.x, pos.y]);
+      currentLine.points(newPoints);
+      roadLayer.batchDraw();
+    });
+
+    stage.on('mouseup touchend', (e) => {
+      isDrawing = false;
+      currentLine = null;
+    });
+
+    // Drag and drop landmarks
+    const palette = document.getElementById('landmark-palette');
+    let dragType = null;
+
+    palette.addEventListener('dragstart', (e) => {
+      dragType = e.target.getAttribute('data-type');
+    });
+    palette.addEventListener('dragend', (e) => {
+      dragType = null;
+    });
+
+    // Allow dropping on canvas
+    const container = stage.container();
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    container.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!dragType) return;
+      // Get mouse position relative to canvas
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      addLandmark(dragType, x, y);
+      dragType = null;
+    });
+
+    function addLandmark(type, x, y) {
+      const emoji = landmarkEmojis[type] || '❓';
+      const text = new Konva.Text({
+        x: x - 16,
+        y: y - 16,
+        text: emoji,
+        fontSize: 32,
+        draggable: true,
+        shadowColor: '#000',
+        shadowBlur: 4,
+        shadowOffset: { x: 2, y: 2 },
+        shadowOpacity: 0.3,
+      });
+      landmarkLayer.add(text);
+      landmarkLayer.draw();
+    }
+
+    // GPS Road Drawing
+    let gpsWatchId = null;
+    let gpsLine = null;
+    let gpsPath = [];
+    let gpsOrigin = null; // {lat, lng}
+    const gpsScale = 10000; // scale factor for lat/lng to px (adjust as needed)
+
+    function latLngToCanvas(lat, lng) {
+      if (!gpsOrigin) return {x: width/2, y: height/2};
+      // Simple equirectangular projection, not for large distances
+      const x = width/2 + (lng - gpsOrigin.lng) * gpsScale;
+      const y = height/2 - (lat - gpsOrigin.lat) * gpsScale;
+      return {x, y};
+    }
+
+    document.getElementById('start-gps').onclick = function() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+      this.disabled = true;
+      document.getElementById('stop-gps').disabled = false;
+      gpsPath = [];
+      gpsOrigin = null;
+      if (gpsLine) { gpsLine.destroy(); gpsLine = null; }
+      const theme = themes[document.getElementById('theme-select').value];
+      gpsLine = new Konva.Line({
+        stroke: theme.roadColor,
+        strokeWidth: 8,
+        points: [],
+        lineCap: 'round',
+        lineJoin: 'round',
+      });
+      roadLayer.add(gpsLine);
+      roadLayer.draw();
+      gpsWatchId = navigator.geolocation.watchPosition(function(pos) {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        if (!gpsOrigin) {
+          gpsOrigin = { lat, lng };
+        }
+        gpsPath.push({ lat, lng });
+        const pt = latLngToCanvas(lat, lng);
+        const newPoints = gpsLine.points().concat([pt.x, pt.y]);
+        gpsLine.points(newPoints);
+        roadLayer.batchDraw();
+      }, function(err) {
+        alert('Error getting GPS position: ' + err.message);
+        document.getElementById('start-gps').disabled = false;
+        document.getElementById('stop-gps').disabled = true;
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000
+      });
+    };
+
+    document.getElementById('stop-gps').onclick = function() {
+      if (gpsWatchId !== null) {
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+      this.disabled = true;
+      document.getElementById('start-gps').disabled = false;
+      // gpsPath now contains the recorded GPS coordinates
+      // You can use gpsPath for later tracking or export
+      // Example: console.log('GPS Path:', gpsPath);
+    };
+
+    // GPS Simulator
+    let gpsSimInterval = null;
+    let gpsSimIndex = 0;
+    let gpsSimPath = [];
+
+    function generateSimPath(origin, count = 30, step = 0.00005) {
+      // Simulate a simple curve path
+      const path = [];
+      let lat = origin.lat;
+      let lng = origin.lng;
+      for (let i = 0; i < count; i++) {
+        lat += step;
+        lng += Math.sin(i / 5) * step * 0.5;
+        path.push({ lat, lng });
+      }
+      return path;
+    }
+
+    document.getElementById('start-gps-sim').onclick = function() {
+      // Prevent running if real GPS is active
+      if (gpsWatchId !== null) {
+        alert('Stop real GPS tracking first!');
+        return;
+      }
+      this.disabled = true;
+      document.getElementById('stop-gps-sim').disabled = false;
+      document.getElementById('start-gps').disabled = true;
+      gpsPath = [];
+      gpsOrigin = { lat: 28.6139, lng: 77.2090 }; // Example: New Delhi
+      gpsSimPath = generateSimPath(gpsOrigin, 40, 0.00008);
+      gpsSimIndex = 0;
+      if (gpsLine) { gpsLine.destroy(); gpsLine = null; }
+      const theme = themes[document.getElementById('theme-select').value];
+      gpsLine = new Konva.Line({
+        stroke: theme.roadColor,
+        strokeWidth: 8,
+        points: [],
+        lineCap: 'round',
+        lineJoin: 'round',
+      });
+      roadLayer.add(gpsLine);
+      roadLayer.draw();
+      gpsSimInterval = setInterval(() => {
+        if (gpsSimIndex >= gpsSimPath.length) {
+          document.getElementById('stop-gps-sim').click();
+          return;
+        }
+        const { lat, lng } = gpsSimPath[gpsSimIndex++];
+        gpsPath.push({ lat, lng });
+        const pt = latLngToCanvas(lat, lng);
+        const newPoints = gpsLine.points().concat([pt.x, pt.y]);
+        gpsLine.points(newPoints);
+        roadLayer.batchDraw();
+      }, 400);
+    };
+
+    document.getElementById('stop-gps-sim').onclick = function() {
+      if (gpsSimInterval) {
+        clearInterval(gpsSimInterval);
+        gpsSimInterval = null;
+      }
+      this.disabled = true;
+      document.getElementById('start-gps-sim').disabled = false;
+      document.getElementById('start-gps').disabled = false;
+      // gpsPath now contains the simulated GPS coordinates
+      // Example: console.log('Simulated GPS Path:', gpsPath);
+    };
+
+    // Export Map Functionality
+    document.getElementById('export-map').onclick = function() {
+      // Collect roads
+      const roads = [];
+      roadLayer.getChildren().forEach(line => {
+        if (line.className === 'Line') {
+          // Convert canvas points to lat/lng if possible
+          // We'll store as canvas points for now, but if GPS origin/scale is set, convert
+          if (gpsOrigin) {
+            const pts = line.points();
+            const arr = [];
+            for (let i = 0; i < pts.length; i += 2) {
+              // Inverse of latLngToCanvas
+              const x = pts[i];
+              const y = pts[i+1];
+              const lng = ((x - width/2) / gpsScale) + gpsOrigin.lng;
+              const lat = gpsOrigin.lat - ((y - height/2) / gpsScale);
+              arr.push({ lat, lng });
+            }
+            roads.push({ points: arr });
+          } else {
+            // fallback: just store canvas points
+            roads.push({ points: line.points() });
+          }
+        }
+      });
+      // Collect landmarks
+      const landmarks = [];
+      landmarkLayer.getChildren().forEach(lm => {
+        if (lm.className === 'Text') {
+          // Convert canvas x/y to lat/lng if possible
+          let type = null;
+          for (const key in landmarkEmojis) {
+            if (landmarkEmojis[key] === lm.text()) type = key;
+          }
+          let lat = null, lng = null;
+          if (gpsOrigin) {
+            const x = lm.x() + 16;
+            const y = lm.y() + 16;
+            lng = ((x - width/2) / gpsScale) + gpsOrigin.lng;
+            lat = gpsOrigin.lat - ((y - height/2) / gpsScale);
+          }
+          landmarks.push({ type, lat, lng });
+        }
+      });
+      // Compose map data
+      const mapData = {
+        gpsOrigin: gpsOrigin || { lat: 28.6139, lng: 77.2090 },
+        gpsScale,
+        roads,
+        landmarks
+      };
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(mapData, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'property-map.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+  </script>
+</body>
+</html> 
