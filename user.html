@@ -16,6 +16,7 @@
     <h2>Property Map Tracker</h2>
     <p>This map shows the property and your current location (if you allow GPS access).</p>
     <input type="file" id="map-upload" accept="application/json" />
+    <div id="nav-instruction" style="font-size:1.2em; font-weight:bold; color:#1d4ed8; margin:10px 0;"></div>
     <p id="status">Waiting for GPS...</p>
   </div>
   <div id="container"></div>
@@ -31,6 +32,9 @@
       ],
       landmarks: [
         // Each landmark: { type: 'house', lat, lng }
+      ],
+      route: [
+        // Example: { lat: 28.6139, lng: 77.2090 }, { lat: 28.6141, lng: 77.2092 }, ...
       ]
     };
     // --- End map data ---
@@ -53,10 +57,12 @@
     const roadLayer = new Konva.Layer();
     const landmarkLayer = new Konva.Layer();
     const userLayer = new Konva.Layer();
+    const routeLayer = new Konva.Layer();
     stage.add(backgroundLayer);
     stage.add(roadLayer);
     stage.add(landmarkLayer);
     stage.add(userLayer);
+    stage.add(routeLayer);
 
     // Draw background
     const bgRect = new Konva.Rect({
@@ -116,6 +122,28 @@
     userLayer.add(userMarker);
     userLayer.draw();
 
+    // Draw route if present
+    function drawRoute() {
+      routeLayer.destroyChildren();
+      if (Array.isArray(mapData.route) && mapData.route.length > 1) {
+        const points = mapData.route.map(pt => {
+          const c = latLngToCanvas(pt.lat, pt.lng);
+          return [c.x, c.y];
+        }).flat();
+        const line = new Konva.Line({
+          points,
+          stroke: '#f59e42',
+          strokeWidth: 5,
+          lineCap: 'round',
+          lineJoin: 'round',
+          dash: [10, 8],
+        });
+        routeLayer.add(line);
+        routeLayer.draw();
+      }
+    }
+    drawRoute();
+
     // Track user position
     function updateUserMarker(lat, lng) {
       const c = latLngToCanvas(lat, lng);
@@ -123,6 +151,7 @@
       userMarker.y(c.y);
       userMarker.visible(true);
       userLayer.batchDraw();
+      updateNavigation(lat, lng);
     }
 
     if (navigator.geolocation) {
@@ -155,11 +184,13 @@
           // Remove old map
           roadLayer.destroyChildren();
           landmarkLayer.destroyChildren();
+          routeLayer.destroyChildren();
           // Update mapData
           mapData.gpsOrigin = data.gpsOrigin;
           mapData.gpsScale = data.gpsScale;
           mapData.roads = data.roads;
           mapData.landmarks = data.landmarks;
+          mapData.route = data.route || [];
           // Redraw roads
           mapData.roads.forEach(road => {
             if (road.points.length < 2) return;
@@ -193,13 +224,15 @@
             landmarkLayer.add(text);
           });
           landmarkLayer.draw();
+          // Redraw route
+          drawRoute();
         } catch (err) {
           alert('Failed to load map: ' + err.message);
         }
       };
       reader.readAsText(file);
     });
-    // ... existing code ...
+
     // --- Enable Zoom and Pan ---
     let scaleBy = 1.1;
     let minScale = 0.5;
@@ -288,8 +321,62 @@
         lastCenter = center;
       }
     });
-// ... existing code ...
 
+    // --- Navigation Suggestion Logic ---
+    function getDistance(a, b) {
+      // Approximate, for small distances
+      const dx = (a.lat - b.lat) * 111320;
+      const dy = (a.lng - b.lng) * 40075000 * Math.cos((a.lat + b.lat) * Math.PI / 360) / 360;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+    function getHeading(a, b) {
+      // Returns angle in degrees from north
+      const dLon = (b.lng - a.lng) * Math.PI / 180;
+      const y = Math.sin(dLon) * Math.cos(b.lat * Math.PI / 180);
+      const x = Math.cos(a.lat * Math.PI / 180) * Math.sin(b.lat * Math.PI / 180) -
+                Math.sin(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.cos(dLon);
+      let brng = Math.atan2(y, x) * 180 / Math.PI;
+      return (brng + 360) % 360;
+    }
+    function getTurnInstruction(userPos, prevPos, route) {
+      if (!route || route.length < 2) return '';
+      // Find closest segment
+      let minDist = Infinity, segIdx = 0;
+      for (let i = 0; i < route.length - 1; i++) {
+        const dist = getDistance(userPos, route[i]);
+        if (dist < minDist) {
+          minDist = dist;
+          segIdx = i;
+        }
+      }
+      // Heading of route segment
+      const segA = route[segIdx];
+      const segB = route[segIdx + 1] || segA;
+      const routeHeading = getHeading(segA, segB);
+      // User movement heading
+      let userHeading = null;
+      if (prevPos) userHeading = getHeading(prevPos, userPos);
+      // Compare headings
+      if (userHeading !== null) {
+        let diff = (routeHeading - userHeading + 540) % 360 - 180;
+        if (Math.abs(diff) < 25) return 'Go straight';
+        if (diff > 25) return 'Turn right';
+        if (diff < -25) return 'Turn left';
+      }
+      return 'Follow the route';
+    }
+    let prevUserPos = null;
+    function updateNavigation(userLat, userLng) {
+      const route = mapData.route;
+      if (!route || route.length < 2) {
+        document.getElementById('nav-instruction').textContent = '';
+        return;
+      }
+      const userPos = { lat: userLat, lng: userLng };
+      const instruction = getTurnInstruction(userPos, prevUserPos, route);
+      document.getElementById('nav-instruction').textContent = instruction;
+      prevUserPos = userPos;
+    }
   </script>
 </body>
 </html> 
