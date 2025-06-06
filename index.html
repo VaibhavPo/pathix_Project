@@ -869,6 +869,44 @@
           landmarks.push({ type, lat, lng });
         }
       });
+      // Collect all image-based icons and emoji landmarks as images
+      const icons = [];
+      landmarkLayer.getChildren().forEach(node => {
+        if (node.className === 'Image' && node.image()) {
+          icons.push({
+            type: node.getAttr('type') || '',
+            x: node.x(),
+            y: node.y(),
+            width: node.width(),
+            height: node.height(),
+            src: node.image().src // should be a data URL
+          });
+        } else if (node.className === 'Text') {
+          // Render emoji to canvas and export as image
+          const canvas = document.createElement('canvas');
+          canvas.width = 40;
+          canvas.height = 40;
+          const ctx = canvas.getContext('2d');
+          ctx.font = '32px Poppins, Segoe UI, Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(node.text(), 20, 20);
+          const dataUrl = canvas.toDataURL('image/png');
+          icons.push({
+            type: (() => {
+              for (const key in landmarkEmojis) {
+                if (landmarkEmojis[key] === node.text()) return key;
+              }
+              return '';
+            })(),
+            x: node.x(),
+            y: node.y(),
+            width: 32,
+            height: 32,
+            src: dataUrl
+          });
+        }
+      });
       // Convert background image to data URL
       let bgDataUrl = null;
       if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
@@ -885,6 +923,7 @@
         gpsScale,
         roads,
         landmarks,
+        icons,
         assets: {
           background: bgDataUrl,
           landmarkHotel: iconDataUrl
