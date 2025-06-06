@@ -36,7 +36,8 @@
     }
     @media (max-width: 700px) {
       body {
-        padding: 0 4vw 0 4vw;
+        padding: 0 2vw 0 2vw;
+        font-size: 1.08em;
       }
     }
     .glass-card {
@@ -86,7 +87,9 @@
     }
     @media (max-width: 700px) {
       .main-layout {
-        padding: 0 2vw 0 2vw;
+        flex-direction: column;
+        gap: 10px;
+        padding: 0 0 0 0;
       }
     }
     .map-area {
@@ -204,24 +207,45 @@
       .main-layout {
         flex-direction: column;
         gap: 10px;
-        padding: 0 2vw 0 2vw;
+        padding: 0 0 0 0;
       }
       .map-area {
         max-width: 100vw;
         min-width: 0;
         padding: 10px 2vw 8px 2vw;
       }
+      .map-canvas-card, .pro-map-canvas {
+        min-height: 180px;
+        height: 56vw;
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 10px;
+        padding: 0;
+      }
       #container {
         min-height: 180px;
-        height: 48vw;
+        height: 56vw;
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 10px;
       }
       #nav-instruction {
-        font-size: 1em;
+        font-size: 1.1em;
         min-height: 32px;
-        padding: 5px 0;
+        padding: 10px 2vw;
+        left: 0 !important;
+        right: 0 !important;
+        width: 96vw;
+        max-width: 100vw;
       }
-      #marker-size-slider {
-        width: 80px;
+      input[type="file"] {
+        font-size: 1.1em;
+        padding: 12px 10px;
+      }
+      .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
       }
     }
     .header-pro {
@@ -399,23 +423,29 @@
       .pro-controls-bar {
         flex-direction: column;
         gap: 10px;
-        padding: 10px 8vw;
+        padding: 10px 2vw;
         min-width: 0;
+        width: 100%;
       }
       .pro-map-area {
         padding: 10px 2vw 8px 2vw;
       }
       .pro-map-canvas {
         min-height: 180px;
-        height: 48vw;
+        height: 56vw;
       }
       .pro-nav-instruction {
-        font-size: 1em;
+        font-size: 1.1em;
         min-height: 32px;
-        padding: 7px 10px;
+        padding: 10px 2vw;
+        left: 0 !important;
+        right: 0 !important;
+        width: 96vw;
+        max-width: 100vw;
       }
       .pro-slider {
-        width: 80px;
+        width: 90vw;
+        max-width: 100vw;
       }
     }
   </style>
