@@ -80,7 +80,66 @@ header {
   .main-layout {
     flex-direction: column;
     gap: 10px;
-    padding: 0 0 0 0;
+    align-items: stretch;
+  }
+  .map-area {
+    max-width: 100vw;
+    min-width: 0;
+    min-height: 180px;
+    padding: 10px 2vw 8px 2vw;
+  }
+  .asset-panel {
+    order: 2;
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    margin-top: 12px;
+    padding: 10px 2vw 8px 2vw;
+    box-sizing: border-box;
+  }
+  .map-canvas-card {
+    min-height: 180px;
+    height: 48vw;
+    padding: 0;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  #container {
+    min-height: 180px;
+    height: 56vw;
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 10px;
+  }
+  .pro-controls-bar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  .pro-controls-bar label,
+  .pro-controls-bar input,
+  .pro-controls-bar span {
+    width: 100%;
+    font-size: 1.1em;
+    margin-bottom: 6px;
+  }
+  .pro-control-icon {
+    font-size: 1.3em;
+    padding: 8px 0;
+  }
+  #marker-size-slider {
+    width: 100%;
+    margin: 0 0 8px 0;
+  }
+  .pro-status-wrap {
+    margin-top: 8px;
+    text-align: center;
+  }
+  .pro-footer {
+    font-size: 1em;
+    padding: 10px 0;
   }
 }
 .map-area {

@@ -50,7 +50,7 @@
   <script>
     // --- Paste your exported map data here ---
     // Example structure:
-    const mapData = {
+    let mapData = {
       gpsOrigin: { lat: 28.6139, lng: 77.2090 }, // Set this to your map's origin
       gpsScale: 10000, // Set this to your map's scale
       roads: [
@@ -141,21 +141,24 @@
     const baseRoadWidth = 8;
     function drawRoads() {
       roadLayer.destroyChildren();
-      mapData.roads.forEach(road => {
+      mapData.roads.forEach((road, idx) => {
+        console.log('Drawing road', idx, 'with points:', road.points);
         if (road.points.length < 2) return;
         const points = road.points.map(pt => {
           const c = latLngToCanvas(pt.lat, pt.lng);
+          console.log('  Projected point:', pt, '->', c);
           return [c.x, c.y];
         }).flat();
         const line = new Konva.Line({
           points,
-          stroke: '#374151',
+          stroke: '#ff0000', // bright red for visibility
           strokeWidth: baseRoadWidth / stage.scaleX(),
           lineCap: 'round',
           lineJoin: 'round',
         });
         roadLayer.add(line);
       });
+      roadLayer.moveToTop();
       roadLayer.draw();
     }
     drawRoads();
@@ -196,7 +199,7 @@
         }).flat();
         const line = new Konva.Line({
           points,
-          stroke: '#f59e42',
+          stroke: '#ffffff',
           strokeWidth: baseRouteWidth / stage.scaleX(),
           lineCap: 'round',
           lineJoin: 'round',
@@ -590,7 +593,8 @@
       dlAnchor.remove();
     }
 
-    function importMap(mapData) {
+    function importMap(mapDataFromJson) {
+      mapData = mapDataFromJson;
       // Set background
       let bgSrc = null;
       if (mapData.assets && mapData.assets.background) {
@@ -607,7 +611,17 @@
           backgroundLayer.add(bg);
           stage.add(backgroundLayer);
           backgroundLayer.draw(); // Ensure the image is rendered
+          drawRoads(); // Redraw roads above background
+          drawRoute(); // Redraw route above background
         };
+        bgImg.onerror = () => {
+          drawRoads();
+          drawRoute();
+        };
+      } else {
+        // No background image, just draw roads and route
+        drawRoads();
+        drawRoute();
       }
 
       // Add icons (hotel landmark)

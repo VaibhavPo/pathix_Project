@@ -28,9 +28,17 @@
         <button id="stop-gps" disabled>Stop GPS Tracking</button>
         <button id="export-map">Export Map</button>
         <button id="simulate-route">Simulate Route</button>
+        <div id="gps-status" class="gps-status off">
+          <span class="dot"></span>
+          GPS Tracking: OFF
+        </div>
       </div>
       <div class="map-canvas-card">
         <div id="container"></div>
+        <div id="mobile-zoom-controls" style="display:none; position:absolute; bottom:16px; right:16px; z-index:10; flex-direction:column; gap:10px;">
+          <button id="zoom-in-btn" style="font-size:2rem; width:48px; height:48px; border-radius:50%; border:none; background:var(--primary); color:#fff; box-shadow:0 2px 8px #23294633;">+</button>
+          <button id="zoom-out-btn" style="font-size:2rem; width:48px; height:48px; border-radius:50%; border:none; background:var(--primary); color:#fff; box-shadow:0 2px 8px #23294633;">-</button>
+        </div>
       </div>
     </div>
     <aside class="asset-panel glass-card">
@@ -40,10 +48,7 @@
         <button class="upload-btn">Upload</button>
         <span style="color:var(--text-muted); font-size:0.98em;">(Coming soon)</span>
       </div>
-      <div id="gps-status" class="gps-status off">
-        <span class="dot"></span>
-        GPS Tracking: OFF
-      </div>
+
     </aside>
   </div>
   <footer style="text-align:center; color:var(--text-muted); font-size:0.98em; margin-bottom:18px; margin-top:10px;">
@@ -197,57 +202,31 @@
     let touchMoveHandler = null;
     let touchEndHandler = null;
 
-    palette.addEventListener('touchstart', function(e) {
-      const target = e.target.closest('.landmark-icon');
-      if (!target) return;
-      e.preventDefault();
-      touchType = target.getAttribute('data-type');
-      // Create a floating emoji
-      touchLandmark = document.createElement('div');
-      touchLandmark.textContent = target.textContent;
-      touchLandmark.style.position = 'fixed';
-      touchLandmark.style.fontSize = '32px';
-      touchLandmark.style.pointerEvents = 'none';
-      touchLandmark.style.zIndex = 9999;
-      document.body.appendChild(touchLandmark);
+    // --- Mobile tap-to-center for palette icons ---
+    function isMobile() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
 
-      function moveTouchLandmark(touch) {
-        touchLandmark.style.left = (touch.clientX - 16) + 'px';
-        touchLandmark.style.top = (touch.clientY - 16) + 'px';
-      }
-
-      touchMoveHandler = function(ev) {
-        if (ev.touches.length > 0) {
-          moveTouchLandmark(ev.touches[0]);
+    if (isMobile()) {
+      palette.addEventListener('touchend', function(e) {
+        const target = e.target.closest('.asset-item');
+        if (!target) return;
+        // Prevent drag/long-press from also firing
+        if (e.cancelBubble) return;
+        e.preventDefault();
+        const type = target.getAttribute('data-type');
+        // Place at center of canvas
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const marker = addLandmark(type, centerX, centerY, true); // true = return marker
+        // Optionally, visually highlight or animate the new marker
+        if (marker) {
+          marker.draggable(true);
+          marker.moveToTop();
+          marker.fire('dragstart'); // visually indicate it's draggable
         }
-      };
-      touchEndHandler = function(ev) {
-        if (touchLandmark) {
-          document.body.removeChild(touchLandmark);
-          touchLandmark = null;
-        }
-        if (touchType && ev.changedTouches && ev.changedTouches.length > 0) {
-          // Drop on map if finger is over the canvas
-          const touch = ev.changedTouches[0];
-          const rect = container.getBoundingClientRect();
-          const x = touch.clientX - rect.left;
-          const y = touch.clientY - rect.top;
-          if (
-            touch.clientX >= rect.left && touch.clientX <= rect.right &&
-            touch.clientY >= rect.top && touch.clientY <= rect.bottom
-          ) {
-            addLandmark(touchType, x, y);
-          }
-        }
-        touchType = null;
-        window.removeEventListener('touchmove', touchMoveHandler);
-        window.removeEventListener('touchend', touchEndHandler);
-      };
-      window.addEventListener('touchmove', touchMoveHandler);
-      window.addEventListener('touchend', touchEndHandler);
-      // Place at initial touch
-      if (e.touches.length > 0) moveTouchLandmark(e.touches[0]);
-    }, { passive: false });
+      }, { passive: false });
+    }
 
     // --- Landmark label popup ---
     let popupDiv = null;
@@ -259,13 +238,23 @@
       // Get position on screen
       const stageBox = stage.container().getBoundingClientRect();
       const absPos = lmNode.getAbsolutePosition();
-      const x = stageBox.left + absPos.x;
-      const y = stageBox.top + absPos.y;
+      let x = stageBox.left + absPos.x;
+      let y = stageBox.top + absPos.y;
+      // Responsive: center on mobile, right of marker on desktop
+      if (window.innerWidth < 600) {
+        x = window.innerWidth/2 - 150;
+        y = window.innerHeight/2 - 80;
+      } else {
+        x = x + 30;
+        y = y - 10;
+      }
       // Create popup
       popupDiv = document.createElement('div');
       popupDiv.className = 'landmark-popup';
-      popupDiv.style.left = (x + 30) + 'px';
-      popupDiv.style.top = (y - 10) + 'px';
+      popupDiv.style.left = x + 'px';
+      popupDiv.style.top = y + 'px';
+      popupDiv.style.maxWidth = window.innerWidth < 600 ? '90vw' : '320px';
+      popupDiv.style.minWidth = window.innerWidth < 600 ? '60vw' : '220px';
       popupDiv.innerHTML = `
         <div class="landmark-popup-title">Edit Place Label</div>
         <input id="lm-label-input" class="landmark-popup-input" type="text" value="${lmNode.getAttr('label') || ''}" placeholder="Enter name or description..." />
@@ -342,7 +331,7 @@
       }
     });
 
-    function addLandmark(type, x, y) {
+    function addLandmark(type, x, y, returnNode) {
       const emoji = landmarkEmojis[type] || '❓';
       const text = new Konva.Text({
         x: x - 16,
@@ -358,6 +347,7 @@
       landmarkLayer.add(text);
       landmarkLayer.draw();
       updateLandmarkLabels();
+      if (returnNode) return text;
       console.log('Landmark added:', { type, x, y });
     }
 
@@ -462,24 +452,19 @@
       const roads = [];
       roadLayer.getChildren().forEach(line => {
         if (line.className === 'Line') {
-          // Convert canvas points to lat/lng if possible
-          // We'll store as canvas points for now, but if GPS origin/scale is set, convert
-          if (gpsOrigin) {
-            const pts = line.points();
-            const arr = [];
-            for (let i = 0; i < pts.length; i += 2) {
-              // Inverse of latLngToCanvas
-              const x = pts[i];
-              const y = pts[i+1];
-              const lng = ((x - width/2) / gpsScale) + gpsOrigin.lng;
-              const lat = gpsOrigin.lat - ((y - height/2) / gpsScale);
-              arr.push({ lat, lng });
-            }
-            roads.push({ points: arr });
-          } else {
-            // fallback: just store canvas points
-            roads.push({ points: line.points() });
+          // Always convert canvas points to {lat, lng}
+          const pts = line.points();
+          const arr = [];
+          // Use gpsOrigin or default
+          const origin = gpsOrigin || { lat: 28.6139, lng: 77.2090 };
+          for (let i = 0; i < pts.length; i += 2) {
+            const x = pts[i];
+            const y = pts[i+1];
+            const lng = ((x - width/2) / gpsScale) + origin.lng;
+            const lat = origin.lat - ((y - height/2) / gpsScale);
+            arr.push({ lat, lng });
           }
+          roads.push({ points: arr });
         }
       });
       // Collect landmarks
@@ -579,6 +564,25 @@
     let scaleBy = 1.1;
     let minScale = 0.5;
     let maxScale = 4;
+
+    // Show zoom controls on mobile
+    if (isMobile()) {
+      document.getElementById('mobile-zoom-controls').style.display = 'flex';
+      document.getElementById('zoom-in-btn').onclick = function() {
+        const oldScale = stage.scaleX();
+        let newScale = Math.min(maxScale, oldScale * scaleBy);
+        stage.scale({ x: newScale, y: newScale });
+        stage.position({ x: 0, y: 0 });
+        stage.batchDraw();
+      };
+      document.getElementById('zoom-out-btn').onclick = function() {
+        const oldScale = stage.scaleX();
+        let newScale = Math.max(minScale, oldScale / scaleBy);
+        stage.scale({ x: newScale, y: newScale });
+        stage.position({ x: 0, y: 0 });
+        stage.batchDraw();
+      };
+    }
 
     // Zoom with mouse wheel
     stage.container().addEventListener('wheel', (e) => {
@@ -820,6 +824,28 @@ bgImg.onload = () => {
       roadLayer.add(window.simLine);
       roadLayer.draw();
     };
+
+    // --- Long-press to edit place label on marker (mobile) ---
+    if (isMobile()) {
+      let longPressTimer = null;
+      let longPressTarget = null;
+      landmarkLayer.on('touchstart', function(e) {
+        if (e.target.className === 'Text') {
+          longPressTarget = e.target;
+          longPressTimer = setTimeout(() => {
+            showLandmarkPopup(longPressTarget);
+            longPressTarget = null;
+          }, 500); // 500ms for long-press
+        }
+      });
+      landmarkLayer.on('touchend touchmove', function(e) {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+          longPressTarget = null;
+        }
+      });
+    }
   </script>
 </body>
 </html> 
