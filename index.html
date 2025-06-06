@@ -21,7 +21,7 @@
       --icon-hover: #f6c177;
     }
     body {
-      font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+      font-family: 'Poppins', 'Segoe UI' !important;
       margin: 0;
       padding: 0 0 0 0;
       background: var(--bg-gradient);
@@ -61,7 +61,6 @@
       font-weight: 700;
       color: var(--primary);
       letter-spacing: 0.01em;
-      text-shadow: 0 2px 8px #232946cc;
       margin-bottom: 2px;
     }
     .subtitle {
@@ -141,6 +140,7 @@
       color: var(--primary);
     }
     .toolbar button {
+      font-family: 'Poppins', 'Segoe UI' !important;
       cursor: pointer;
       font-weight: 500;
       background: var(--icon-bg);
@@ -154,6 +154,7 @@
       color: #fff;
     }
     .map-canvas-card {
+      font-family: 'Poppins', 'Segoe UI' !important;
       width: 100%;
       min-height: 340px;
       background: #fff2;
@@ -280,6 +281,113 @@
         height: 48vw;
       }
     }
+    .gps-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-family: inherit;
+      background: rgba(220,220,220,0.7);
+      color: #444;
+      margin-left: 12px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .gps-status .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      background: #aaa;
+      display: inline-block;
+      transition: background 0.3s;
+    }
+    .gps-status.on {
+      background: rgba(60,200,120,0.15);
+      color: #2a7a4f;
+    }
+    .gps-status.on .dot {
+      background: #2ecc71;
+      animation: pulse 1s infinite;
+    }
+    .gps-status.off {
+      background: rgba(220,220,220,0.7);
+      color: #888;
+    }
+    .gps-status.off .dot {
+      background: #aaa;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 #2ecc7144; }
+      70% { box-shadow: 0 0 0 8px #2ecc7100; }
+      100% { box-shadow: 0 0 0 0 #2ecc7100; }
+    }
+    /* Landmark popup styling */
+    .landmark-popup {
+      position: fixed;
+      background: var(--glass-bg);
+      border: 1.5px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px #181c2a99;
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      padding: 18px 20px 14px 20px;
+      z-index: 9999;
+      min-width: 220px;
+      color: var(--text);
+      font-family: inherit;
+      transition: background 0.3s, color 0.3s;
+    }
+    .landmark-popup-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 1.08em;
+    }
+    .landmark-popup-input {
+      width: 100%;
+      font-size: 1em;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1.5px solid var(--glass-border);
+      margin-bottom: 12px;
+      color: var(--text);
+      background: var(--icon-bg);
+      outline: none;
+      transition: border 0.2s, background 0.2s, color 0.2s;
+    }
+    .landmark-popup-input:focus {
+      border: 1.5px solid var(--primary);
+      background: var(--glass-bg);
+      color: var(--primary);
+    }
+    .landmark-popup-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .landmark-popup-btn {
+      border: none;
+      border-radius: 8px;
+      padding: 7px 18px;
+      font-size: 1em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .landmark-popup-btn.save {
+      background: var(--accent);
+      color: #fff;
+    }
+    .landmark-popup-btn.cancel {
+      background: var(--icon-bg);
+      color: var(--text);
+    }
+    .landmark-popup-btn.delete {
+      background: #c0392b;
+      color: #fff;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -313,11 +421,17 @@
         <button class="upload-btn">Upload</button>
         <span style="color:var(--text-muted); font-size:0.98em;">(Coming soon)</span>
       </div>
+      <div id="gps-status" class="gps-status off">
+        <span class="dot"></span>
+        GPS Tracking: OFF
+      </div>
     </aside>
   </div>
   <footer style="text-align:center; color:var(--text-muted); font-size:0.98em; margin-bottom:18px; margin-top:10px;">
     &copy; 2024 Pathix &mdash; Crafted with <span style="color:var(--accent);">&#10084;&#65039;</span>
   </footer>
+
+
 
   <script>
     // Theme definitions
@@ -517,24 +631,16 @@
       const y = stageBox.top + absPos.y;
       // Create popup
       popupDiv = document.createElement('div');
-      popupDiv.style.position = 'fixed';
+      popupDiv.className = 'landmark-popup';
       popupDiv.style.left = (x + 30) + 'px';
       popupDiv.style.top = (y - 10) + 'px';
-      popupDiv.style.background = 'var(--primary)';
-      popupDiv.style.border = '1.5px solid var(--accent)';
-      popupDiv.style.borderRadius = '10px';
-      popupDiv.style.boxShadow = '0 4px 16px var(--neutral2)';
-      popupDiv.style.padding = '14px 16px 10px 16px';
-      popupDiv.style.zIndex = 9999;
-      popupDiv.style.minWidth = '180px';
-      popupDiv.style.color = 'var(--text)';
       popupDiv.innerHTML = `
-        <div style="font-weight:600; margin-bottom:8px; color:var(--accent);">Edit Place Label</div>
-        <input id="lm-label-input" type="text" style="width:98%; font-size:1em; padding:6px; border-radius:6px; border:1px solid var(--neutral2); margin-bottom:10px; color:var(--text); background:var(--neutral2);" value="${lmNode.getAttr('label') || ''}" placeholder="Enter name or description..." />
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-          <button id="lm-label-save" style="background:var(--accent); color:#fff; border:none; border-radius:6px; padding:6px 14px; font-weight:500;">Save</button>
-          <button id="lm-label-cancel" style="background:var(--neutral2); color:var(--text); border:none; border-radius:6px; padding:6px 14px;">Cancel</button>
-          <button id="lm-label-delete" style="background:#c0392b; color:#fff; border:none; border-radius:6px; padding:6px 14px; font-weight:500; margin-left:8px;">Delete</button>
+        <div class="landmark-popup-title">Edit Place Label</div>
+        <input id="lm-label-input" class="landmark-popup-input" type="text" value="${lmNode.getAttr('label') || ''}" placeholder="Enter name or description..." />
+        <div class="landmark-popup-actions">
+          <button id="lm-label-save" class="landmark-popup-btn save">Save</button>
+          <button id="lm-label-cancel" class="landmark-popup-btn cancel">Cancel</button>
+          <button id="lm-label-delete" class="landmark-popup-btn delete">Delete</button>
         </div>
       `;
       document.body.appendChild(popupDiv);
@@ -620,6 +726,7 @@
       landmarkLayer.add(text);
       landmarkLayer.draw();
       updateLandmarkLabels();
+      console.log('Landmark added:', { type, x, y });
     }
 
     // GPS Road Drawing
@@ -635,6 +742,21 @@
       const x = width/2 + (lng - gpsOrigin.lng) * gpsScale;
       const y = height/2 - (lat - gpsOrigin.lat) * gpsScale;
       return {x, y};
+    }
+
+    function setGpsStatus(isOn) {
+      const status = document.getElementById('gps-status');
+      if (isOn) {
+        status.classList.add('on');
+        status.classList.remove('off');
+        status.textContent = '';
+        status.innerHTML = '<span class="dot"></span>GPS Tracking: ON';
+      } else {
+        status.classList.add('off');
+        status.classList.remove('on');
+        status.textContent = '';
+        status.innerHTML = '<span class="dot"></span>GPS Tracking: OFF';
+      }
     }
 
     document.getElementById('start-gps').onclick = function() {
@@ -676,6 +798,7 @@
         maximumAge: 0,
         timeout: 10000
       });
+      setGpsStatus(true);
     };
 
     document.getElementById('stop-gps').onclick = function() {
@@ -688,7 +811,18 @@
       // gpsPath now contains the recorded GPS coordinates
       // You can use gpsPath for later tracking or export
       // Example: console.log('GPS Path:', gpsPath);
+      setGpsStatus(false);
     };
+
+    // Helper to convert an image to a data URL
+    function imageToDataURL(img) {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      return canvas.toDataURL('image/png');
+    }
 
     // Export Map Functionality
     document.getElementById('export-map').onclick = function() {
@@ -735,12 +869,26 @@
           landmarks.push({ type, lat, lng });
         }
       });
+      // Convert background image to data URL
+      let bgDataUrl = null;
+      if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+        bgDataUrl = imageToDataURL(bgImg);
+      }
+      // Convert custom icon to data URL
+      let iconDataUrl = null;
+      if (iconImg && iconImg.complete && iconImg.naturalWidth > 0) {
+        iconDataUrl = imageToDataURL(iconImg);
+      }
       // Compose map data
       const mapData = {
         gpsOrigin: gpsOrigin || { lat: 28.6139, lng: 77.2090 },
         gpsScale,
         roads,
-        landmarks
+        landmarks,
+        assets: {
+          background: bgDataUrl,
+          landmarkHotel: iconDataUrl
+        }
       };
       // Download as JSON
       const blob = new Blob([JSON.stringify(mapData, null, 2)], {type: 'application/json'});
@@ -880,6 +1028,79 @@
     landmarkLayer.on('dragmove', updateLandmarkLabels);
     // Initial call in case of reload
     updateLandmarkLabels();
+
+    // Theme color palettes
+    const uiThemes = {
+      classic: {
+        '--bg-gradient': 'linear-gradient(135deg, #fefae0 0%, #faedcd 100%)',
+        '--glass-bg': 'rgba(255,255,255,0.75)',
+        '--glass-border': 'rgba(212,163,115,0.18)',
+        '--glass-blur': '12px',
+        '--primary': '#d4a373',
+        '--accent': '#b08968',
+        '--button-glow': '0 0 16px #d4a37388, 0 2px 8px #b08968cc',
+        '--text': '#3c2f2f',
+        '--text-muted': '#b08968',
+        '--icon-bg': 'rgba(212,163,115,0.08)',
+        '--icon-hover': '#b08968',
+      },
+      night: {
+        '--bg-gradient': 'linear-gradient(135deg, #232946 0%, #181c2a 100%)',
+        '--glass-bg': 'rgba(36, 41, 61, 0.65)',
+        '--glass-border': 'rgba(255,255,255,0.12)',
+        '--glass-blur': '18px',
+        '--primary': '#a3bffa',
+        '--accent': '#f6c177',
+        '--button-glow': '0 0 16px #f6c17788, 0 2px 8px #232946cc',
+        '--text': '#f7f7fa',
+        '--text-muted': '#bfc6e0',
+        '--icon-bg': 'rgba(255,255,255,0.08)',
+        '--icon-hover': '#f6c177',
+      }
+    };
+    function setUITheme(theme) {
+      const vars = uiThemes[theme] || uiThemes.night;
+      for (const key in vars) {
+        document.documentElement.style.setProperty(key, vars[key]);
+      }
+    }
+    // Set default theme
+    setUITheme('night');
+    // Listen for theme change
+    document.addEventListener('DOMContentLoaded', function() {
+      const themeSelect = document.getElementById('theme-select');
+      if (themeSelect) {
+        themeSelect.addEventListener('change', function(e) {
+          setUITheme(e.target.value);
+        });
+      }
+    });
+
+    // Load background
+    const bgImg = new window.Image();
+    bgImg.src = 'Assets/bg1.png';
+    bgImg.onload = () => {
+      const bg = new Konva.Image({ image: bgImg, width: stage.width(), height: stage.height() });
+      backgroundLayer.add(bg);
+      backgroundLayer.moveToBottom(bg);
+      stage.add(backgroundLayer);
+    };
+
+    // Add a custom landmark icon
+    const iconImg = new window.Image();
+    iconImg.src = 'assets/landmark-hotel.png';
+    iconImg.onload = () => {
+      const icon = new Konva.Image({
+        image: iconImg,
+        x: 200,
+        y: 300,
+        width: 80,
+        height: 80,
+        draggable: true
+      });
+      landmarkLayer.add(icon);
+      stage.add(landmarkLayer);
+    };
   </script>
 </body>
 </html> 

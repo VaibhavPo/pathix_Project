@@ -61,7 +61,6 @@
       font-weight: 700;
       color: var(--primary);
       letter-spacing: 0.01em;
-      text-shadow: 0 2px 8px #232946cc;
       margin-bottom: 2px;
     }
     .subtitle {
@@ -133,6 +132,7 @@
       overflow: hidden;
       transition: box-shadow 0.3s;
       padding: 0;
+      border: 2px solid red;
     }
     #nav-instruction {
       display: flex;
@@ -224,33 +224,240 @@
         width: 80px;
       }
     }
+    .header-pro {
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+    .theme-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-label {
+      font-weight: 500;
+      color: var(--text);
+    }
+    .theme-select {
+      font-size: 1em;
+      border-radius: 8px;
+      border: 1.5px solid var(--glass-border);
+      padding: 7px 16px;
+      background: var(--icon-bg);
+      color: var(--text);
+      box-shadow: 0 1px 4px var(--primary);
+      transition: border 0.2s;
+    }
+    .header-divider {
+      width: 100%;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent 0%, var(--glass-border) 50%, transparent 100%);
+      margin: 18px 0 0 0;
+      border-radius: 1px;
+    }
+    .pro-map-area {
+      box-shadow: 0 8px 32px #23294633, 0 1.5px 0 0 var(--accent);
+      border-radius: 24px;
+      padding: 28px 18px 18px 18px;
+      margin-top: 18px;
+      background: var(--glass-bg);
+      border: 1.5px solid var(--glass-border);
+      position: relative;
+    }
+    .pro-map-canvas {
+      background: linear-gradient(135deg, #fff 60%, #f6c17722 100%);
+      border-radius: 18px;
+      box-shadow: 0 4px 24px #23294633;
+      border: 1.5px solid var(--glass-border);
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+      position: relative;
+      overflow: hidden;
+      min-height: 340px;
+    }
+    .pro-nav-instruction {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 10;
+      box-shadow: 0 4px 16px #23294633;
+      min-width: 120px;
+      max-width: 90vw;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 14px;
+      font-size: 1.18em;
+      font-weight: 600;
+      padding: 10px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      animation: fadeInNav 0.7s;
+      border: none;
+    }
+    .pro-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: var(--icon-bg);
+      border-radius: 32px;
+      padding: 10px 24px;
+      margin: 32px auto 0 auto;
+      box-shadow: 0 2px 8px #23294622;
+      width: fit-content;
+      min-width: 220px;
+      max-width: 98vw;
+    }
+    .pro-control-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      background: transparent;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .pro-control-icon:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+    .pro-slider {
+      width: 120px;
+      accent-color: var(--accent);
+      border-radius: 8px;
+      background: var(--icon-bg);
+      box-shadow: 0 1px 4px var(--primary);
+      height: 4px;
+      outline: none;
+      transition: box-shadow 0.2s;
+    }
+    .pro-marker-value {
+      font-weight: 500;
+      color: var(--primary);
+      margin: 0 2px 0 2px;
+    }
+    .pro-divider {
+      width: 1.5px;
+      height: 28px;
+      background: var(--glass-border);
+      border-radius: 1px;
+      margin: 0 10px;
+    }
+    .pro-status-wrap {
+      margin-top: 18px;
+      text-align: center;
+    }
+    #status {
+      font-size: 1em;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+      background: none;
+      padding: 0;
+      border: none;
+      margin: 0;
+    }
+    .pro-footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.98em;
+      margin-bottom: 18px;
+      margin-top: 0;
+      font-weight: 400;
+    }
+    .footer-divider {
+      width: 100%;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent 0%, var(--glass-border) 50%, transparent 100%);
+      margin: 0 0 18px 0;
+      border-radius: 1px;
+    }
+    .footer-content {
+      opacity: 0.85;
+    }
+    @media (max-width: 700px) {
+      .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .pro-controls-bar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 8vw;
+        min-width: 0;
+      }
+      .pro-map-area {
+        padding: 10px 2vw 8px 2vw;
+      }
+      .pro-map-canvas {
+        min-height: 180px;
+        height: 48vw;
+      }
+      .pro-nav-instruction {
+        font-size: 1em;
+        min-height: 32px;
+        padding: 7px 10px;
+      }
+      .pro-slider {
+        width: 80px;
+      }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="app-title">
-      <span>🗺️</span>
-      <span>Pathix</span>
+  <header class="header-pro">
+    <div class="header-row">
+      <div class="app-title">
+        <span>🗺️</span>
+        <span>Pathix</span>
+      </div>
+      <div class="theme-select-wrap">
+        <label for="theme-select" class="theme-label">Theme:</label>
+        <select id="theme-select" class="theme-select">
+          <option value="classic">Classic</option>
+          <option value="night" selected>Night</option>
+        </select>
+      </div>
     </div>
     <div class="subtitle">Navigate your property map in style</div>
+    <div class="header-divider"></div>
   </header>
   <div class="main-layout">
-    <div class="map-area glass-card">
-      <div class="map-canvas-card">
+    <div class="map-area glass-card pro-map-area">
+      <div class="map-canvas-card pro-map-canvas">
         <div id="container"></div>
       </div>
       <div id="nav-instruction"></div>
-      <div style="margin: 18px 0 0 0; width:100%; display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:center;">
-        <input type="file" id="map-upload" accept="application/json" />
-        <label for="marker-size-slider" style="font-size:1em;">Marker Size:</label>
-        <input type="range" id="marker-size-slider" min="6" max="40" value="12" style="vertical-align:middle;">
-        <span id="marker-size-value">12</span> px
+      <div class="pro-controls-bar">
+        <label for="map-upload" class="pro-control-icon" title="Upload Map"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg></label>
+        <input type="file" id="map-upload" accept="application/json" style="display:none;" />
+        <span class="pro-divider"></span>
+        <span class="pro-control-icon" title="Marker Size"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></span>
+        <input type="range" id="marker-size-slider" min="6" max="40" value="12" class="pro-slider">
+        <span id="marker-size-value" class="pro-marker-value">12</span> px
       </div>
-      <p id="status" style="margin-top:18px;">Waiting for GPS...</p>
+      <div class="pro-status-wrap"><span id="status">Waiting for GPS...</span></div>
     </div>
   </div>
-  <footer style="text-align:center; color:var(--text-muted); font-size:0.98em; margin-bottom:18px; margin-top:10px;">
-    &copy; 2024 Pathix &mdash; Crafted with <span style="color:var(--accent);">&#10084;&#65039;</span>
+  <footer class="pro-footer">
+    <div class="footer-divider"></div>
+    <div class="footer-content">&copy; 2024 Pathix &mdash; Crafted with <span style="color:var(--accent);">&#10084;&#65039;</span></div>
   </footer>
   <script>
     // --- Paste your exported map data here ---
@@ -267,6 +474,27 @@
       ],
       route: [
         // Example: { lat: 28.6139, lng: 77.2090 }, { lat: 28.6141, lng: 77.2092 }, ...
+      ],
+      background: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...", // or "assets/bg.png"
+      icons: [
+        {
+          type: "hotel",
+          x: 200,
+          y: 300,
+          src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...", // or "assets/hotel.png"
+          width: 80,
+          height: 80,
+          label: "Hotel Paradise"
+        },
+        {
+          type: "temple",
+          x: 400,
+          y: 500,
+          src: "assets/temple.png",
+          width: 80,
+          height: 80,
+          label: "Ancient Temple"
+        }
       ]
     };
     // --- End map data ---
@@ -297,11 +525,13 @@
     const landmarkLayer = new Konva.Layer();
     const userLayer = new Konva.Layer();
     const routeLayer = new Konva.Layer();
+    const iconLayer = new Konva.Layer();
     stage.add(backgroundLayer);
     stage.add(roadLayer);
     stage.add(landmarkLayer);
     stage.add(userLayer);
     stage.add(routeLayer);
+    stage.add(iconLayer);
 
     // Draw background
     let bgRect = new Konva.Rect({
@@ -424,39 +654,7 @@
       reader.onload = function(evt) {
         try {
           const data = JSON.parse(evt.target.result);
-          if (!data.gpsOrigin || !data.gpsScale || !Array.isArray(data.roads) || !Array.isArray(data.landmarks)) {
-            throw new Error('Invalid map data format.');
-          }
-          // Remove old map
-          roadLayer.destroyChildren();
-          landmarkLayer.destroyChildren();
-          routeLayer.destroyChildren();
-          // Update mapData
-          mapData.gpsOrigin = data.gpsOrigin;
-          mapData.gpsScale = data.gpsScale;
-          mapData.roads = data.roads;
-          mapData.landmarks = data.landmarks;
-          mapData.route = data.route || [];
-          // Redraw roads
-          drawRoads();
-          // Redraw landmarks
-          mapData.landmarks.forEach(lm => {
-            const c = latLngToCanvas(lm.lat, lm.lng);
-            const text = new Konva.Text({
-              x: c.x - 16,
-              y: c.y - 16,
-              text: landmarkEmojis[lm.type] || '❓',
-              fontSize: 32,
-              shadowColor: '#000',
-              shadowBlur: 4,
-              shadowOffset: { x: 2, y: 2 },
-              shadowOpacity: 0.3,
-            });
-            landmarkLayer.add(text);
-          });
-          landmarkLayer.draw();
-          // Redraw route
-          drawRoute();
+          importMap(data); // Use the importMap function to handle all map data
         } catch (err) {
           alert('Failed to load map: ' + err.message);
         }
@@ -678,6 +876,209 @@
     window.addEventListener('resize', resizeStage);
     // Initial resize to fit container
     setTimeout(resizeStage, 0);
+
+    // Theme color palettes
+    const uiThemes = {
+      classic: {
+        '--bg-gradient': 'linear-gradient(135deg, #fefae0 0%, #faedcd 100%)',
+        '--glass-bg': 'rgba(255,255,255,0.75)',
+        '--glass-border': 'rgba(212,163,115,0.18)',
+        '--glass-blur': '12px',
+        '--primary': '#d4a373',
+        '--accent': '#b08968',
+        '--button-glow': '0 0 16px #d4a37388, 0 2px 8px #b08968cc',
+        '--text': '#3c2f2f',
+        '--text-muted': '#b08968',
+        '--icon-bg': 'rgba(212,163,115,0.08)',
+        '--icon-hover': '#b08968',
+      },
+      night: {
+        '--bg-gradient': 'linear-gradient(135deg, #232946 0%, #181c2a 100%)',
+        '--glass-bg': 'rgba(36, 41, 61, 0.65)',
+        '--glass-border': 'rgba(255,255,255,0.12)',
+        '--glass-blur': '18px',
+        '--primary': '#a3bffa',
+        '--accent': '#f6c177',
+        '--button-glow': '0 0 16px #f6c17788, 0 2px 8px #232946cc',
+        '--text': '#f7f7fa',
+        '--text-muted': '#bfc6e0',
+        '--icon-bg': 'rgba(255,255,255,0.08)',
+        '--icon-hover': '#f6c177',
+      }
+    };
+    function setUITheme(theme) {
+      const vars = uiThemes[theme] || uiThemes.night;
+      for (const key in vars) {
+        document.documentElement.style.setProperty(key, vars[key]);
+      }
+    }
+    // Set default theme
+    setUITheme('night');
+    // Listen for theme change
+    document.addEventListener('DOMContentLoaded', function() {
+      const themeSelect = document.getElementById('theme-select');
+      if (themeSelect) {
+        themeSelect.addEventListener('change', function(e) {
+          setUITheme(e.target.value);
+        });
+      }
+    });
+
+    function loadMapFromJson(mapData) {
+      // Set background
+      const bgImg = new window.Image();
+      bgImg.src = mapData.background;
+      bgImg.onload = () => {
+        const bg = new Konva.Image({ image: bgImg, width: stage.width(), height: stage.height() });
+        backgroundLayer.destroyChildren();
+        backgroundLayer.add(bg);
+        stage.add(backgroundLayer);
+      };
+
+      // Clear and add icons
+      iconLayer.destroyChildren();
+      mapData.icons.forEach(iconData => {
+        const markerImg = new window.Image();
+        markerImg.src = iconData.src;
+        markerImg.onload = () => {
+          const marker = new Konva.Image({
+            image: markerImg,
+            x: iconData.x,
+            y: iconData.y,
+            width: iconData.width,
+            height: iconData.height,
+            draggable: true
+          });
+          iconLayer.add(marker);
+          stage.add(iconLayer);
+        };
+      });
+    }
+
+    function exportMap() {
+      // Get background as data URL (if needed)
+      const bgNode = backgroundLayer.findOne('Image');
+      let background = bgNode ? bgNode.image().src : null;
+
+      // Get all icons
+      const icons = [];
+      iconLayer.find('Image').forEach(icon => {
+        icons.push({
+          type: icon.attrs.type || '',
+          x: icon.x(),
+          y: icon.y(),
+          src: icon.image().src,
+          width: icon.width(),
+          height: icon.height(),
+          label: icon.attrs.label || ''
+        });
+      });
+
+      // Get all routes
+      const routes = [];
+      routeLayer.find('Line').forEach(line => {
+        routes.push({
+          points: line.points(),
+          color: line.stroke(),
+          width: line.strokeWidth()
+        });
+      });
+
+      // Compose export object
+      const exportData = {
+        background,
+        theme: currentTheme, // if you have theme switching
+        icons,
+        routes
+      };
+
+      // Download as JSON
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
+      const dlAnchor = document.createElement('a');
+      dlAnchor.setAttribute("href", dataStr);
+      dlAnchor.setAttribute("download", "map.json");
+      document.body.appendChild(dlAnchor);
+      dlAnchor.click();
+      dlAnchor.remove();
+    }
+
+    function importMap(mapData) {
+      // Set background
+      let bgSrc = null;
+      if (mapData.assets && mapData.assets.background) {
+        bgSrc = mapData.assets.background;
+      } else if (mapData.background) {
+        bgSrc = mapData.background;
+      }
+      if (bgSrc) {
+        const bgImg = new window.Image();
+        bgImg.src = bgSrc;
+        bgImg.onload = () => {
+          backgroundLayer.destroyChildren(); // Remove rect and previous images
+          const bg = new Konva.Image({ image: bgImg, width: stage.width(), height: stage.height() });
+          backgroundLayer.add(bg);
+          stage.add(backgroundLayer);
+          backgroundLayer.draw(); // Ensure the image is rendered
+        };
+      }
+
+      // Add icons (hotel landmark)
+      iconLayer.destroyChildren();
+      if (mapData.assets && mapData.assets.landmarkHotel) {
+        const iconImg = new window.Image();
+        iconImg.src = mapData.assets.landmarkHotel;
+        iconImg.onload = () => {
+          const icon = new Konva.Image({
+            image: iconImg,
+            x: 200,
+            y: 300,
+            width: 80,
+            height: 80,
+            draggable: false
+          });
+          iconLayer.add(icon);
+          stage.add(iconLayer);
+        };
+      }
+      // Add any other icons from mapData.icons if present
+      if (Array.isArray(mapData.icons)) {
+        mapData.icons.forEach(iconData => {
+          const iconImg = new window.Image();
+          iconImg.src = iconData.src;
+          iconImg.onload = () => {
+            const icon = new Konva.Image({
+              image: iconImg,
+              x: iconData.x,
+              y: iconData.y,
+              width: iconData.width,
+              height: iconData.height,
+              draggable: false // or true if you want
+            });
+            iconLayer.add(icon);
+            stage.add(iconLayer);
+          };
+        });
+      }
+
+      // Add routes
+      if (Array.isArray(mapData.routes)) {
+        routeLayer.destroyChildren();
+        mapData.routes.forEach(route => {
+          const line = new Konva.Line({
+            points: route.points,
+            stroke: route.color,
+            strokeWidth: route.width,
+            lineCap: 'round',
+            lineJoin: 'round'
+          });
+          routeLayer.add(line);
+          stage.add(routeLayer);
+        });
+      }
+
+      // Apply theme if needed
+      if (mapData.theme) setTheme(mapData.theme);
+    }
   </script>
 </body>
 </html> 
