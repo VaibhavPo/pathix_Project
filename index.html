@@ -110,7 +110,7 @@
     const backgroundLayer = new Konva.Layer();
     const roadLayer = new Konva.Layer();
     const landmarkLayer = new Konva.Layer();
-    // stage.add(backgroundLayer);
+    stage.add(backgroundLayer);
     stage.add(roadLayer);
     stage.add(landmarkLayer);
 
@@ -763,7 +763,7 @@
         image: bgImg,
         width: stage.width(),
         height: stage.height(),
-        opacity: 0,
+        opacity: 1,
       });
 
       // Add the image below everything else
