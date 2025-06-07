@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
   <title>Property Map Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -520,10 +523,11 @@
       const bgImg = new window.Image();
       bgImg.src = mapData.background;
       bgImg.onload = () => {
-        const bg = new Konva.Image({ image: bgImg, width: stage.width(), height: stage.height() });
+        const bg = new Konva.Image({ image: bgImg, width: stage.width(), height: stage.height() ,opacity: 0.2 });
         backgroundLayer.destroyChildren();
         backgroundLayer.add(bg);
         stage.add(backgroundLayer);
+       
       };
 
       // Clear and add icons
@@ -681,6 +685,120 @@
       // Apply theme if needed
       if (mapData.theme) setTheme(mapData.theme);
     }
+    // Enhanced touch handling for mobile
+let touchStartPos = null;
+let touchStartScale = null;
+let touchStartPosition = null;
+
+stage.on('touchstart', (e) => {
+  if (e.evt.touches.length === 1) {
+    touchStartPos = {
+      x: e.evt.touches[0].clientX,
+      y: e.evt.touches[0].clientY
+    };
+    touchStartScale = stage.scaleX();
+    touchStartPosition = stage.position();
+  }
+});
+
+stage.on('touchmove', (e) => {
+  if (e.evt.touches.length === 1 && touchStartPos) {
+    const touch = e.evt.touches[0];
+    const dx = touch.clientX - touchStartPos.x;
+    const dy = touch.clientY - touchStartPos.y;
+    
+    stage.position({
+      x: touchStartPosition.x + dx,
+      y: touchStartPosition.y + dy
+    });
+    stage.batchDraw();
+  }
+});
+
+stage.on('touchend', () => {
+  touchStartPos = null;
+});
+
+// Improved zoom handling for mobile
+let lastZoomDistance = 0;
+let isZooming = false;
+
+stage.on('touchmove', (e) => {
+  if (e.evt.touches.length === 2) {
+    isZooming = true;
+    const touch1 = e.evt.touches[0];
+    const touch2 = e.evt.touches[1];
+    const currentDistance = Math.hypot(
+      touch1.clientX - touch2.clientX,
+      touch1.clientY - touch2.clientY
+    );
+    
+    if (lastZoomDistance > 0) {
+      const scaleFactor = currentDistance / lastZoomDistance;
+      const newScale = stage.scaleX() * scaleFactor;
+      
+      // Limit zoom levels
+      const clampedScale = Math.max(minScale, Math.min(maxScale, newScale));
+      stage.scale({ x: clampedScale, y: clampedScale });
+      
+      // Calculate center point between fingers
+      const center = {
+        x: (touch1.clientX + touch2.clientX) / 2,
+        y: (touch1.clientY + touch2.clientY) / 2
+      };
+      
+      // Adjust position to zoom toward center
+      const mousePointTo = {
+        x: (center.x - stage.x()) / stage.scaleX(),
+        y: (center.y - stage.y()) / stage.scaleY()
+      };
+      
+      const newPos = {
+        x: center.x - mousePointTo.x * clampedScale,
+        y: center.y - mousePointTo.y * clampedScale
+      };
+      
+      stage.position(newPos);
+      stage.batchDraw();
+      updateScales();
+    }
+    
+    lastZoomDistance = currentDistance;
+  } else {
+    lastZoomDistance = 0;
+  }
+});
+
+stage.on('touchend', () => {
+  if (isZooming) {
+    isZooming = false;
+    // Small delay to prevent accidental taps after zooming
+    setTimeout(() => {
+      stage.draggable(false);
+    }, 100);
+  }
+});
+
+// Larger hit areas for mobile
+userLayer.on('click tap', (e) => {
+  if (e.target === userLayer) return;
+  // Show coordinates on tap
+  const pos = userMarker.position();
+  document.getElementById('status').textContent = 
+    `Marker at: ${pos.x.toFixed(0)}, ${pos.y.toFixed(0)}`;
+});
+
+// Prevent accidental zooming on iOS
+document.addEventListener('gesturestart', (e) => {
+  e.preventDefault();
+});
+
+// Better mobile orientation handling
+function handleOrientationChange() {
+  setTimeout(resizeStage, 300); // Allow time for orientation to complete
+}
+
+window.addEventListener('orientationchange', handleOrientationChange);
   </script>
 </body>
 </html> 

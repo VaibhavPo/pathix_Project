@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
   <link rel="stylesheet" href="style_index.css">
 </head>
+
 <body>
   <header>
     <div class="app-title">
@@ -35,9 +37,12 @@
       </div>
       <div class="map-canvas-card">
         <div id="container"></div>
-        <div id="mobile-zoom-controls" style="display:none; position:absolute; bottom:16px; right:16px; z-index:10; flex-direction:column; gap:10px;">
-          <button id="zoom-in-btn" style="font-size:2rem; width:48px; height:48px; border-radius:50%; border:none; background:var(--primary); color:#fff; box-shadow:0 2px 8px #23294633;">+</button>
-          <button id="zoom-out-btn" style="font-size:2rem; width:48px; height:48px; border-radius:50%; border:none; background:var(--primary); color:#fff; box-shadow:0 2px 8px #23294633;">-</button>
+        <div id="mobile-zoom-controls"
+          style="display:none; position:absolute; bottom:16px; right:16px; z-index:10; flex-direction:column; gap:10px;">
+          <button id="zoom-in-btn"
+            style="font-size:2rem; width:48px; height:48px; border-radius:50%; border:none; background:var(--primary); color:#fff; box-shadow:0 2px 8px #23294633;">+</button>
+          <button id="zoom-out-btn"
+            style="font-size:2rem; width:48px; height:48px; border-radius:50%; border:none; background:var(--primary); color:#fff; box-shadow:0 2px 8px #23294633;">-</button>
         </div>
       </div>
     </div>
@@ -105,7 +110,7 @@
     const backgroundLayer = new Konva.Layer();
     const roadLayer = new Konva.Layer();
     const landmarkLayer = new Konva.Layer();
-    stage.add(backgroundLayer);
+    // stage.add(backgroundLayer);
     stage.add(roadLayer);
     stage.add(landmarkLayer);
 
@@ -117,22 +122,22 @@
     backgroundLayer.draw();
 
     document.getElementById('theme-select').addEventListener('change', (e) => {
-  currentTheme = e.target.value;
-  const theme = themes[currentTheme];
+      currentTheme = e.target.value;
+      const theme = themes[currentTheme];
 
-  // Update background color if no image is loaded
-  if (!bgImg.complete || bgImg.naturalWidth === 0) {
-    bgRect.fill(theme.background);
-  }
+      // Update background color if no image is loaded
+      if (!bgImg.complete || bgImg.naturalWidth === 0) {
+        bgRect.fill(theme.background);
+      }
 
-  // Update GPS and drawn road colors
-  roadLayer.getChildren().forEach((line) => {
-    if (line.className === 'Line') {
-      line.stroke(theme.roadColor);
-    }
-  });
-  roadLayer.batchDraw();
-});
+      // Update GPS and drawn road colors
+      roadLayer.getChildren().forEach((line) => {
+        if (line.className === 'Line') {
+          line.stroke(theme.roadColor);
+        }
+      });
+      roadLayer.batchDraw();
+    });
 
 
     // Road drawing
@@ -140,34 +145,34 @@
     let currentLine = null;
     let currentTheme = 'classic';
 
-    stage.on('mousedown touchstart', (e) => {
-      // Only draw on empty space
-      if (e.target !== stage) return;
-      isDrawing = true;
-      const pos = stage.getPointerPosition();
-      const theme = themes[document.getElementById('theme-select').value];
-      currentLine = new Konva.Line({
-        stroke: theme.roadColor,
-        strokeWidth: 8,
-        points: [pos.x, pos.y],
-        lineCap: 'round',
-        lineJoin: 'round',
-      });
-      roadLayer.add(currentLine);
-    });
+    // stage.on('mousedown touchstart', (e) => {
+    //   // Only draw on empty space
+    //   if (e.target !== stage) return;
+    //   isDrawing = true;
+    //   const pos = stage.getPointerPosition();
+    //   const theme = themes[document.getElementById('theme-select').value];
+    //   currentLine = new Konva.Line({
+    //     stroke: theme.roadColor,
+    //     strokeWidth: 8,
+    //     points: [pos.x, pos.y],
+    //     lineCap: 'round',
+    //     lineJoin: 'round',
+    //   });
+    //   roadLayer.add(currentLine);
+    // });
 
-    stage.on('mousemove touchmove', (e) => {
-      if (!isDrawing || !currentLine) return;
-      const pos = stage.getPointerPosition();
-      const newPoints = currentLine.points().concat([pos.x, pos.y]);
-      currentLine.points(newPoints);
-      roadLayer.batchDraw();
-    });
+    // stage.on('mousemove touchmove', (e) => {
+    //   if (!isDrawing || !currentLine) return;
+    //   const pos = stage.getPointerPosition();
+    //   const newPoints = currentLine.points().concat([pos.x, pos.y]);
+    //   currentLine.points(newPoints);
+    //   roadLayer.batchDraw();
+    // });
 
-    stage.on('mouseup touchend', (e) => {
-      isDrawing = false;
-      currentLine = null;
-    });
+    // stage.on('mouseup touchend', (e) => {
+    //   isDrawing = false;
+    //   currentLine = null;
+    // });
 
     // Drag and drop landmarks
     const palette = document.getElementById('landmark-palette');
@@ -208,7 +213,7 @@
     }
 
     if (isMobile()) {
-      palette.addEventListener('touchend', function(e) {
+      palette.addEventListener('touchend', function (e) {
         const target = e.target.closest('.asset-item');
         if (!target) return;
         // Prevent drag/long-press from also firing
@@ -242,8 +247,8 @@
       let y = stageBox.top + absPos.y;
       // Responsive: center on mobile, right of marker on desktop
       if (window.innerWidth < 600) {
-        x = window.innerWidth/2 - 150;
-        y = window.innerHeight/2 - 80;
+        x = window.innerWidth / 2 - 150;
+        y = window.innerHeight / 2 - 80;
       } else {
         x = x + 30;
         y = y - 10;
@@ -267,14 +272,14 @@
       document.body.appendChild(popupDiv);
       document.getElementById('lm-label-input').focus();
       // Save handler
-      document.getElementById('lm-label-save').onclick = function() {
+      document.getElementById('lm-label-save').onclick = function () {
         const val = document.getElementById('lm-label-input').value.trim();
         lmNode.setAttr('label', val);
         updateLandmarkLabels();
         closeLandmarkPopup();
       };
       document.getElementById('lm-label-cancel').onclick = closeLandmarkPopup;
-      document.getElementById('lm-label-delete').onclick = function() {
+      document.getElementById('lm-label-delete').onclick = function () {
         // Remove the landmark and its label
         lmNode.destroy();
         updateLandmarkLabels();
@@ -325,7 +330,7 @@
       landmarkLayer.batchDraw();
     }
     // Listen for click/tap on landmarks
-    stage.on('click tap', function(e) {
+    stage.on('click tap', function (e) {
       if (e.target.getParent() === landmarkLayer && e.target.className === 'Text') {
         showLandmarkPopup(e.target);
       }
@@ -359,11 +364,11 @@
     const gpsScale = 10000;
 
     function latLngToCanvas(lat, lng) {
-      if (!gpsOrigin) return {x: width/2, y: height/2};
+      if (!gpsOrigin) return { x: width / 2, y: height / 2 };
       // Simple equirectangular projection, not for large distances
-      const x = width/2 + (lng - gpsOrigin.lng) * gpsScale;
-      const y = height/2 - (lat - gpsOrigin.lat) * gpsScale;
-      return {x, y};
+      const x = width / 2 + (lng - gpsOrigin.lng) * gpsScale;
+      const y = height / 2 - (lat - gpsOrigin.lat) * gpsScale;
+      return { x, y };
     }
 
     function setGpsStatus(isOn) {
@@ -381,7 +386,7 @@
       }
     }
 
-    document.getElementById('start-gps').onclick = function() {
+    document.getElementById('start-gps').onclick = function () {
       if (!navigator.geolocation) {
         alert('Geolocation is not supported by your browser.');
         return;
@@ -401,7 +406,7 @@
       });
       roadLayer.add(gpsLine);
       roadLayer.draw();
-      gpsWatchId = navigator.geolocation.watchPosition(function(pos) {
+      gpsWatchId = navigator.geolocation.watchPosition(function (pos) {
         const { latitude: lat, longitude: lng } = pos.coords;
         if (!gpsOrigin) {
           gpsOrigin = { lat, lng };
@@ -411,19 +416,19 @@
         const newPoints = gpsLine.points().concat([pt.x, pt.y]);
         gpsLine.points(newPoints);
         roadLayer.batchDraw();
-      }, function(err) {
+      }, function (err) {
         alert('Error getting GPS position: ' + err.message);
         document.getElementById('start-gps').disabled = false;
         document.getElementById('stop-gps').disabled = true;
       }, {
         enableHighAccuracy: true,
         maximumAge: 0,
-        timeout: 10000
+        timeout: 15000
       });
       setGpsStatus(true);
     };
 
-    document.getElementById('stop-gps').onclick = function() {
+    document.getElementById('stop-gps').onclick = function () {
       if (gpsWatchId !== null) {
         navigator.geolocation.clearWatch(gpsWatchId);
         gpsWatchId = null;
@@ -447,7 +452,7 @@
     }
 
     // Export Map Functionality
-    document.getElementById('export-map').onclick = function() {
+    document.getElementById('export-map').onclick = function () {
       // Collect roads
       const roads = [];
       roadLayer.getChildren().forEach(line => {
@@ -459,9 +464,9 @@
           const origin = gpsOrigin || { lat: 28.6139, lng: 77.2090 };
           for (let i = 0; i < pts.length; i += 2) {
             const x = pts[i];
-            const y = pts[i+1];
-            const lng = ((x - width/2) / gpsScale) + origin.lng;
-            const lat = origin.lat - ((y - height/2) / gpsScale);
+            const y = pts[i + 1];
+            const lng = ((x - width / 2) / gpsScale) + origin.lng;
+            const lat = origin.lat - ((y - height / 2) / gpsScale);
             arr.push({ lat, lng });
           }
           roads.push({ points: arr });
@@ -480,8 +485,8 @@
           if (gpsOrigin) {
             const x = lm.x() + 16;
             const y = lm.y() + 16;
-            lng = ((x - width/2) / gpsScale) + gpsOrigin.lng;
-            lat = gpsOrigin.lat - ((y - height/2) / gpsScale);
+            lng = ((x - width / 2) / gpsScale) + gpsOrigin.lng;
+            lat = gpsOrigin.lat - ((y - height / 2) / gpsScale);
           }
           landmarks.push({ type, lat, lng });
         }
@@ -547,7 +552,7 @@
         }
       };
       // Download as JSON
-      const blob = new Blob([JSON.stringify(mapData, null, 2)], {type: 'application/json'});
+      const blob = new Blob([JSON.stringify(mapData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -568,14 +573,14 @@
     // Show zoom controls on mobile
     if (isMobile()) {
       document.getElementById('mobile-zoom-controls').style.display = 'flex';
-      document.getElementById('zoom-in-btn').onclick = function() {
+      document.getElementById('zoom-in-btn').onclick = function () {
         const oldScale = stage.scaleX();
         let newScale = Math.min(maxScale, oldScale * scaleBy);
         stage.scale({ x: newScale, y: newScale });
         stage.position({ x: 0, y: 0 });
         stage.batchDraw();
       };
-      document.getElementById('zoom-out-btn').onclick = function() {
+      document.getElementById('zoom-out-btn').onclick = function () {
         const oldScale = stage.scaleX();
         let newScale = Math.max(minScale, oldScale / scaleBy);
         stage.scale({ x: newScale, y: newScale });
@@ -742,33 +747,34 @@
     // Set default theme
     setUITheme('night');
     // Listen for theme change
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const themeSelect = document.getElementById('theme-select');
       if (themeSelect) {
-        themeSelect.addEventListener('change', function(e) {
+        themeSelect.addEventListener('change', function (e) {
           setUITheme(e.target.value);
         });
       }
     });
 
     const bgImg = new window.Image();
-bgImg.src = 'Assets/bg1.png';
-bgImg.onload = () => {
-  const bg = new Konva.Image({
-    image: bgImg,
-    width: stage.width(),
-    height: stage.height(),
-  });
+    bgImg.src = 'Assets/bg1.png';
+    bgImg.onload = () => {
+      const bg = new Konva.Image({
+        image: bgImg,
+        width: stage.width(),
+        height: stage.height(),
+        opacity: 0,
+      });
 
-  // Add the image below everything else
-  backgroundLayer.add(bg);
-  bg.moveToBottom();
+      // Add the image below everything else
+      backgroundLayer.add(bg);
+      bg.moveToBottom();
 
-  // Optional: hide the background rect if image is present
-  bgRect.visible(false);
+      // Optional: hide the background rect if image is present
+      bgRect.visible(false);
 
-  backgroundLayer.draw();
-};
+      backgroundLayer.draw();
+    };
 
     // Add a custom landmark icon
     const iconImg = new window.Image();
@@ -786,7 +792,7 @@ bgImg.onload = () => {
       stage.add(landmarkLayer);
     };
 
-    document.getElementById('simulate-route').onclick = function() {
+    document.getElementById('simulate-route').onclick = function () {
       // Remove previous simulated route if any
       if (window.simLine) {
         window.simLine.destroy();
@@ -829,7 +835,7 @@ bgImg.onload = () => {
     if (isMobile()) {
       let longPressTimer = null;
       let longPressTarget = null;
-      landmarkLayer.on('touchstart', function(e) {
+      landmarkLayer.on('touchstart', function (e) {
         if (e.target.className === 'Text') {
           longPressTarget = e.target;
           longPressTimer = setTimeout(() => {
@@ -838,7 +844,7 @@ bgImg.onload = () => {
           }, 500); // 500ms for long-press
         }
       });
-      landmarkLayer.on('touchend touchmove', function(e) {
+      landmarkLayer.on('touchend touchmove', function (e) {
         if (longPressTimer) {
           clearTimeout(longPressTimer);
           longPressTimer = null;
@@ -848,4 +854,5 @@ bgImg.onload = () => {
     }
   </script>
 </body>
-</html> 
+
+</html>
