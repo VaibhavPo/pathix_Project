@@ -24,7 +24,7 @@
         <label for="theme-select">Theme:</label>
         <select id="theme-select">
           <option value="classic">Classic</option>
-          <option value="night">Night</option>
+          <option value="night" selected>Night</option>
         </select>
         <button id="start-gps">Start GPS Tracking</button>
         <button id="stop-gps" disabled>Stop GPS Tracking</button>
@@ -107,12 +107,27 @@
       width,
       height,
     });
+
     const backgroundLayer = new Konva.Layer();
     const roadLayer = new Konva.Layer();
     const landmarkLayer = new Konva.Layer();
+    
+    const layer = new Konva.Layer();
+
+      const simpleText = new Konva.Text({
+    x: stage.width() / 2-40,
+    y: 15,
+    text: 'Map Name',
+    fontSize: 30,
+    fontFamily: 'Poppins',
+    fill: 'Grey'
+  });
+  layer.add(simpleText);
     stage.add(backgroundLayer);
     stage.add(roadLayer);
     stage.add(landmarkLayer);
+    stage.add(layer);
+  
 
     // Draw background rect
     let bgRect = new Konva.Rect({
