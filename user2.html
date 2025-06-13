@@ -97,6 +97,11 @@
       box-shadow: 0 -2px 12px #0002;
       z-index: 100;
       font-weight: 500;
+      transition: background 0.2s;
+    }
+    .status-bar.navigation {
+      background: linear-gradient(90deg, #43a047 0%, #4f46e5 100%);
+      color: #fff;
     }
     .nav-btn {
       margin-top: 18px;
@@ -364,7 +369,9 @@
         instruction = 'You have arrived at your destination!';
       }
       navInstruction = instruction;
-      document.getElementById('status-bar').innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 NAVIGATION</span> | ${navInstruction}`;
+      const bar = document.getElementById('status-bar');
+      bar.innerHTML = `<span style='color:#fff;font-weight:600;'>📍 NAVIGATION</span> | ${navInstruction}`;
+      bar.classList.add('navigation');
     }
 
     // --- Show Navigation button ---
@@ -397,15 +404,22 @@
         generateMap(userPos);
         updateMap();
         document.getElementById('show-nav-btn').disabled = false;
-        document.getElementById('status-bar').innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
+        const bar = document.getElementById('status-bar');
+        bar.innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
+        bar.classList.remove('navigation');
       }, function(err) {
         document.getElementById('status-bar').textContent = 'Unable to get your location.';
       }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
       navigator.geolocation.watchPosition(function(pos) {
         userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         updateMap();
-        if (navigationRoute) updateNavigation();
-        else document.getElementById('status-bar').innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
+        const bar = document.getElementById('status-bar');
+        if (navigationRoute) {
+          updateNavigation();
+        } else {
+          bar.innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
+          bar.classList.remove('navigation');
+        }
       });
     } else {
       document.getElementById('status-bar').textContent = 'Geolocation is not supported by your browser.';
