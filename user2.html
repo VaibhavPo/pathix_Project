@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pathix Live User Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/konva@9.2.0/konva.min.js"></script>
+  <style>
+    html, body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #232946 0%, #181c2a 100%);
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      width: 100vw;
+      overflow-x: hidden;
+    }
+    .header-section {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 0 16px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .map-card {
+      padding: 20px 8px 8px 8px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.12);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+      max-width: 900px;
+      width: 98vw;
+      margin: 0 auto 16px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .slider-wrap {
+      margin-bottom: 12px;
+      width: 98vw;
+      max-width: 320px;
+      color: #4f46e5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 1em;
+    }
+    .slider-wrap label {
+      font-size: 1em;
+      margin-bottom: 2px;
+    }
+    .slider-wrap input[type=range] {
+      width: 100%;
+      margin: 0 0 4px 0;
+      accent-color: #4f46e5;
+      height: 28px;
+      touch-action: pan-x;
+    }
+    .slider-wrap span {
+      font-size: 1em;
+      font-weight: 600;
+    }
+    .map-container {
+      width: 98vw;
+      max-width: 800px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px #0002;
+      border: 1.5px solid #bfc6e0;
+      background: rgba(255,255,255,0.10);
+      margin: 0 auto;
+      min-height: 220px;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status-bar {
+      width: 100vw;
+      max-width: 900px;
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 12px 0 10px 0;
+      border-radius: 16px 16px 0 0;
+      background: rgba(36,41,61,0.95);
+      color: #f7f7fa;
+      font-size: 1.08em;
+      text-align: center;
+      box-shadow: 0 -2px 12px #0002;
+      z-index: 100;
+      font-weight: 500;
+    }
+    .nav-btn {
+      margin-top: 18px;
+      padding: 14px 0;
+      width: 98vw;
+      max-width: 320px;
+      background: #4f46e5;
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #4f46e588;
+      transition: background 0.2s;
+      letter-spacing: 0.5px;
+      display: block;
+    }
+    .nav-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .header-section span, .header-section svg {
+      font-size: 40px !important;
+    }
+    .header-section .main-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #4f46e5;
+    }
+    .header-section .subtitle {
+      font-size: 1rem;
+      color: #bfc6e0;
+      font-weight: 400;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+    @media (max-width: 600px) {
+      .header-section { padding: 18px 0 8px 0; }
+      .map-card { padding: 10px 2px 2px 2px; border-radius: 12px; }
+      .slider-wrap { max-width: 98vw; font-size: 0.98em; }
+      .map-container { min-width: 120px; min-height: 120px; border-radius: 10px; }
+      .status-bar { font-size: 0.98em; border-radius: 10px 10px 0 0; }
+      .nav-btn { font-size: 1em; border-radius: 8px; }
+      .header-section .main-title { font-size: 1.1rem; }
+      .header-section span, .header-section svg { font-size: 32px !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <span>📍</span>
+    <div class="main-title">Live Property Map</div>
+    <div class="subtitle">See your location and nearby assets in real time</div>
+    <button class="nav-btn" id="show-nav-btn" disabled>Show Navigation</button>
+  </div>
+  <div class="map-card">
+    <div class="slider-wrap">
+      <label for="marker-size-slider">User Marker Size</label>
+      <input type="range" id="marker-size-slider" min="6" max="40" value="14">
+      <span id="marker-size-value">14</span> px
+    </div>
+    <div class="map-container">
+      <div id="container"></div>
+    </div>
+  </div>
+  <div class="status-bar" id="status-bar">Waiting for GPS...</div>
+  <script>
+    // --- Map and navigation logic ---
+    let mapData = null;
+    let userPos = null;
+    let navigationRoute = null;
+    let navInstruction = '';
+    let markerRadius = 14;
+    let stage, backgroundLayer, roadLayer, landmarkLayer, userLayer, routeLayer;
+    let userMarker;
+
+    // Helper: Haversine distance in meters
+    function haversineDistance(a, b) {
+      const toRad = deg => deg * Math.PI / 180;
+      const R = 6371000;
+      const dLat = toRad(b.lat - a.lat);
+      const dLng = toRad(b.lng - a.lng);
+      const lat1 = toRad(a.lat);
+      const lat2 = toRad(b.lat);
+      const aVal = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.sin(dLng/2) * Math.sin(dLng/2) * Math.cos(lat1) * Math.cos(lat2);
+      const c = 2 * Math.atan2(Math.sqrt(aVal), Math.sqrt(1-aVal));
+      return R * c;
+    }
+
+    // Helper: Generate random point within radius (meters)
+    function randomPointNear(lat, lng, radiusMeters) {
+      const r = radiusMeters / 111300;
+      const u = Math.random();
+      const v = Math.random();
+      const w = r * Math.sqrt(u);
+      const t = 2 * Math.PI * v;
+      const x = w * Math.cos(t);
+      const y = w * Math.sin(t);
+      return { lat: lat + y, lng: lng + x };
+    }
+
+    // Landmark types
+    const landmarkTypes = [
+      { type: 'house', emoji: '🏠' },
+      { type: 'tree', emoji: '🌳' },
+      { type: 'shop', emoji: '🏪' },
+      { type: 'restaurant', emoji: '🍽️' },
+      { type: 'school', emoji: '🏫' }
+    ];
+
+    // --- Konva setup ---
+    function setupMap(center) {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      const width = Math.min(container.clientWidth || 320, window.innerWidth * 0.98);
+      const height = Math.min(500, width * 0.625);
+      stage = new Konva.Stage({ container: 'container', width, height });
+      backgroundLayer = new Konva.Layer();
+      roadLayer = new Konva.Layer();
+      landmarkLayer = new Konva.Layer();
+      userLayer = new Konva.Layer();
+      routeLayer = new Konva.Layer();
+      stage.add(backgroundLayer);
+      stage.add(roadLayer);
+      stage.add(landmarkLayer);
+      stage.add(userLayer);
+      stage.add(routeLayer);
+      // Background
+      const bgRect = new Konva.Rect({ x: 0, y: 0, width, height, fill: '#e0e7ff' });
+      backgroundLayer.add(bgRect);
+      backgroundLayer.draw();
+    }
+
+    // --- Lat/lng to canvas ---
+    function latLngToCanvas(lat, lng, center, width, height, scale = 10000) {
+      const x = width/2 + (lng - center.lng) * scale;
+      const y = height/2 - (lat - center.lat) * scale;
+      return { x, y };
+    }
+
+    // --- Draw roads ---
+    function drawRoads(center, width, height) {
+      roadLayer.destroyChildren();
+      mapData.roads.forEach(road => {
+        if (road.points.length < 2) return;
+        const points = road.points.map(pt => {
+          const c = latLngToCanvas(pt.lat, pt.lng, center, width, height);
+          return [c.x, c.y];
+        }).flat();
+        const line = new Konva.Line({
+          points,
+          stroke: '#374151',
+          strokeWidth: 8,
+          lineCap: 'round',
+          lineJoin: 'round',
+        });
+        roadLayer.add(line);
+      });
+      roadLayer.draw();
+    }
+
+    // --- Draw landmarks ---
+    function drawLandmarks(center, width, height) {
+      landmarkLayer.destroyChildren();
+      mapData.landmarks.forEach(lm => {
+        const c = latLngToCanvas(lm.lat, lm.lng, center, width, height);
+        const text = new Konva.Text({
+          x: c.x - 16,
+          y: c.y - 16,
+          text: lm.emoji,
+          fontSize: 32,
+          shadowColor: '#000',
+          shadowBlur: 4,
+          shadowOffset: { x: 2, y: 2 },
+          shadowOpacity: 0.3,
+        });
+        landmarkLayer.add(text);
+      });
+      landmarkLayer.draw();
+    }
+
+    // --- Draw user marker ---
+    function drawUserMarker(center, width, height) {
+      userLayer.destroyChildren();
+      if (!userPos) return;
+      const c = latLngToCanvas(userPos.lat, userPos.lng, center, width, height);
+      // Pulse
+      const pulse = new Konva.Circle({
+        x: c.x, y: c.y, radius: markerRadius * 1.6, fill: '#2196f3', opacity: 0.18, listening: false
+      });
+      userLayer.add(pulse);
+      // Main dot
+      userMarker = new Konva.Circle({
+        x: c.x, y: c.y, radius: markerRadius, fill: '#1d4ed8', stroke: '#fff', strokeWidth: 4, shadowBlur: 8, shadowColor: '#1d4ed8', listening: false
+      });
+      userLayer.add(userMarker);
+      userLayer.draw();
+    }
+
+    // --- Draw navigation route ---
+    function drawNavigationRoute(center, width, height) {
+      routeLayer.destroyChildren();
+      if (navigationRoute && navigationRoute.length > 1) {
+        const points = navigationRoute.map(pt => {
+          const c = latLngToCanvas(pt.lat, pt.lng, center, width, height);
+          return [c.x, c.y];
+        }).flat();
+        const line = new Konva.Line({
+          points,
+          stroke: '#43a047',
+          strokeWidth: 10,
+          lineCap: 'round',
+          lineJoin: 'round',
+          dash: [18, 12],
+          shadowBlur: 8,
+          shadowColor: '#43a047',
+        });
+        routeLayer.add(line);
+      }
+      routeLayer.draw();
+    }
+
+    // --- Update all layers ---
+    function updateMap() {
+      if (!mapData) return;
+      const container = document.getElementById('container');
+      const width = Math.min(container.clientWidth || 320, window.innerWidth * 0.98);
+      const height = Math.min(500, width * 0.625);
+      setupMap(mapData.center);
+      drawRoads(mapData.center, width, height);
+      drawLandmarks(mapData.center, width, height);
+      drawUserMarker(mapData.center, width, height);
+      drawNavigationRoute(mapData.center, width, height);
+    }
+
+    // --- Generate map around user ---
+    function generateMap(center) {
+      // 3 roads
+      const roads = Array.from({ length: 3 }).map(() => {
+        const start = randomPointNear(center.lat, center.lng, 500);
+        const mid = randomPointNear(center.lat, center.lng, 1200);
+        const end = randomPointNear(center.lat, center.lng, 2000);
+        return { points: [start, mid, end] };
+      });
+      // 5 landmarks
+      const landmarks = Array.from({ length: 5 }).map((_, i) => {
+        const pt = randomPointNear(center.lat, center.lng, 1800);
+        const t = landmarkTypes[i % landmarkTypes.length];
+        return { ...t, lat: pt.lat, lng: pt.lng };
+      });
+      mapData = { center, roads, landmarks };
+    }
+
+    // --- Navigation logic ---
+    function updateNavigation() {
+      if (!navigationRoute || !userPos) return;
+      const dest = navigationRoute[navigationRoute.length - 1];
+      const dist = haversineDistance(userPos, dest);
+      let instruction = '';
+      if (dist > 30) {
+        instruction = `Go straight for ${Math.round(dist)} meters`;
+      } else {
+        instruction = 'You have arrived at your destination!';
+      }
+      navInstruction = instruction;
+      document.getElementById('status-bar').innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 NAVIGATION</span> | ${navInstruction}`;
+    }
+
+    // --- Show Navigation button ---
+    document.getElementById('show-nav-btn').onclick = function() {
+      if (!userPos || !mapData || !mapData.landmarks.length) return;
+      // Find nearest landmark
+      let minDist = Infinity, nearest = null;
+      for (const lm of mapData.landmarks) {
+        const d = haversineDistance(userPos, lm);
+        if (d < minDist) { minDist = d; nearest = lm; }
+      }
+      if (nearest) {
+        navigationRoute = [userPos, nearest];
+        updateNavigation();
+        updateMap();
+      }
+    };
+
+    // --- Marker size slider ---
+    document.getElementById('marker-size-slider').oninput = function(e) {
+      markerRadius = parseInt(this.value, 10);
+      document.getElementById('marker-size-value').textContent = markerRadius;
+      updateMap();
+    };
+
+    // --- Get user location and generate map ---
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        generateMap(userPos);
+        updateMap();
+        document.getElementById('show-nav-btn').disabled = false;
+        document.getElementById('status-bar').innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
+      }, function(err) {
+        document.getElementById('status-bar').textContent = 'Unable to get your location.';
+      }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+      navigator.geolocation.watchPosition(function(pos) {
+        userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        updateMap();
+        if (navigationRoute) updateNavigation();
+        else document.getElementById('status-bar').innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
+      });
+    } else {
+      document.getElementById('status-bar').textContent = 'Geolocation is not supported by your browser.';
+    }
+  </script>
+</body>
+</html> 
