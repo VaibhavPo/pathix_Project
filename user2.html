@@ -10,145 +10,303 @@
   <style>
     html, body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #232946 0%, #181c2a 100%);
+      background: linear-gradient(135deg, #1a1f3c 0%, #0f1220 100%);
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       width: 100vw;
       overflow-x: hidden;
+      color: #e2e8f0;
     }
     .header-section {
       width: 100%;
       max-width: 900px;
       margin: 0 auto;
-      padding: 32px 0 16px 0;
+      padding: 40px 0 24px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
     }
     .map-card {
-      padding: 20px 8px 8px 8px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.12);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+      padding: 24px 16px 16px 16px;
+      border-radius: 24px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       max-width: 900px;
       width: 98vw;
-      margin: 0 auto 16px auto;
+      margin: 0 auto 24px auto;
       display: flex;
       flex-direction: column;
       align-items: center;
+      border: 1px solid rgba(255,255,255,0.1);
     }
-    .slider-wrap {
-      margin-bottom: 12px;
+    .zoom-controls {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+    }
+    .zoom-btn {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s ease;
+    }
+    .zoom-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .destination-input {
       width: 98vw;
       max-width: 320px;
-      color: #4f46e5;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    .destination-input input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1em;
+      backdrop-filter: blur(4px);
+    }
+    .destination-input input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    .destination-input button {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #818cf8;
+      color: #fff;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .destination-input button:hover {
+      background: #6366f1;
+    }
+    .slider-wrap {
+      margin-bottom: 16px;
+      width: 98vw;
+      max-width: 320px;
+      color: #818cf8;
       display: flex;
       flex-direction: column;
       align-items: center;
       font-size: 1em;
+      background: rgba(255,255,255,0.05);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
     }
     .slider-wrap label {
       font-size: 1em;
-      margin-bottom: 2px;
+      margin-bottom: 8px;
+      color: #e2e8f0;
+      font-weight: 500;
     }
     .slider-wrap input[type=range] {
       width: 100%;
-      margin: 0 0 4px 0;
-      accent-color: #4f46e5;
+      margin: 0 0 8px 0;
+      accent-color: #818cf8;
       height: 28px;
       touch-action: pan-x;
     }
     .slider-wrap span {
       font-size: 1em;
       font-weight: 600;
+      color: #818cf8;
     }
     .map-container {
       width: 98vw;
       max-width: 800px;
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 4px 24px #0002;
-      border: 1.5px solid #bfc6e0;
-      background: rgba(255,255,255,0.10);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
       margin: 0 auto;
       min-height: 220px;
       min-width: 220px;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+    }
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .performance-mode {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 0.9em;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      z-index: 100;
     }
     .status-bar {
-      width: 100vw;
-      max-width: 900px;
+      display: none; /* Hide the old status bar */
+    }
+    .nav-notification {
       position: fixed;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-      margin: 0;
-      padding: 12px 0 10px 0;
-      border-radius: 16px 16px 0 0;
-      background: rgba(36,41,61,0.95);
-      color: #f7f7fa;
-      font-size: 1.08em;
-      text-align: center;
-      box-shadow: 0 -2px 12px #0002;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(26,31,60,0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      color: #e2e8f0;
+      font-size: 1em;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
       z-index: 100;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    .status-bar.navigation {
-      background: linear-gradient(90deg, #43a047 0%, #4f46e5 100%);
-      color: #fff;
-    }
-    .nav-btn {
-      margin-top: 18px;
-      padding: 14px 0;
-      width: 98vw;
+      min-width: 280px;
       max-width: 320px;
-      background: #4f46e5;
-      color: #fff;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      font-size: 1.1em;
-      cursor: pointer;
-      box-shadow: 0 2px 8px #4f46e588;
-      transition: background 0.2s;
-      letter-spacing: 0.5px;
-      display: block;
+      transition: all 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
     }
-    .nav-btn:disabled {
+    .nav-notification.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .nav-notification .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .nav-notification .header span {
+      color: #34d399;
+      font-weight: 600;
+      font-size: 1.1em;
+    }
+    .nav-notification .distance {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #fff;
+      margin: 8px 0;
+    }
+    .nav-notification .instruction {
+      color: #94a3b8;
+      font-size: 0.95em;
+      line-height: 1.4;
+    }
+    .nav-notification .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      font-size: 1.2em;
+      transition: color 0.2s ease;
+    }
+    .nav-notification .close-btn:hover {
+      color: #fff;
+    }
+    .nav-notification.navigation {
+      background: linear-gradient(135deg, rgba(26,31,60,0.95) 0%, rgba(52,211,153,0.1) 100%);
+    }
+    .nav-notification .sound-toggle {
+      position: absolute;
+      top: 12px;
+      right: 40px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      font-size: 1.2em;
+      transition: color 0.2s ease;
+    }
+    .nav-notification .sound-toggle:hover {
+      color: #fff;
+    }
+    .nav-notification .sound-toggle.muted {
       opacity: 0.5;
-      cursor: not-allowed;
     }
     .header-section span, .header-section svg {
-      font-size: 40px !important;
+      font-size: 48px !important;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
     }
     .header-section .main-title {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       font-weight: 700;
       letter-spacing: 1px;
-      color: #4f46e5;
+      color: #818cf8;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      margin: 8px 0;
     }
     .header-section .subtitle {
-      font-size: 1rem;
-      color: #bfc6e0;
+      font-size: 1.1rem;
+      color: #94a3b8;
       font-weight: 400;
       text-align: center;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
     @media (max-width: 600px) {
-      .header-section { padding: 18px 0 8px 0; }
-      .map-card { padding: 10px 2px 2px 2px; border-radius: 12px; }
-      .slider-wrap { max-width: 98vw; font-size: 0.98em; }
-      .map-container { min-width: 120px; min-height: 120px; border-radius: 10px; }
-      .status-bar { font-size: 0.98em; border-radius: 10px 10px 0 0; }
-      .nav-btn { font-size: 1em; border-radius: 8px; }
-      .header-section .main-title { font-size: 1.1rem; }
-      .header-section span, .header-section svg { font-size: 32px !important; }
+      .header-section { padding: 24px 0 16px 0; }
+      .map-card { padding: 16px 8px 8px 8px; border-radius: 16px; }
+      .slider-wrap { max-width: 98vw; font-size: 0.98em; padding: 12px; }
+      .map-container { min-width: 120px; min-height: 120px; border-radius: 12px; }
+      .status-bar { font-size: 0.98em; border-radius: 16px 16px 0 0; }
+      .nav-btn { font-size: 1em; border-radius: 10px; }
+      .header-section .main-title { font-size: 1.4rem; }
+      .header-section span, .header-section svg { font-size: 40px !important; }
+      .nav-notification {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        max-width: none;
+      }
     }
   </style>
 </head>
@@ -157,9 +315,14 @@
     <span>📍</span>
     <div class="main-title">Live Property Map</div>
     <div class="subtitle">See your location and nearby assets in real time</div>
-    <button class="nav-btn" id="show-nav-btn" disabled>Show Navigation</button>
+    <button id="upload-json-btn" style="margin-top:12px;display:none;">Upload Map JSON</button>
+    <input type="file" id="json-file-input" accept="application/json" style="display:none;" />
   </div>
   <div class="map-card">
+    <div class="destination-input">
+      <input type="text" id="destination-input" placeholder="Enter destination coordinates (lat,lng)">
+      <button id="set-destination-btn">Set Destination</button>
+    </div>
     <div class="slider-wrap">
       <label for="marker-size-slider">User Marker Size</label>
       <input type="range" id="marker-size-slider" min="6" max="40" value="14">
@@ -167,7 +330,23 @@
     </div>
     <div class="map-container">
       <div id="container"></div>
+      <div class="loading-overlay" id="loading-overlay">Updating map...</div>
+      <div class="performance-mode" id="performance-mode">Performance Mode: Off</div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoom-in">+</button>
+        <button class="zoom-btn" id="zoom-out">-</button>
+      </div>
     </div>
+  </div>
+  <div class="nav-notification" id="nav-notification">
+    <button class="sound-toggle" id="sound-toggle">🔊</button>
+    <button class="close-btn" id="close-nav">×</button>
+    <div class="header">
+      <span>📍</span>
+      <span>Navigation</span>
+    </div>
+    <div class="distance" id="nav-distance">0 m</div>
+    <div class="instruction" id="nav-instruction">Waiting for destination...</div>
   </div>
   <div class="status-bar" id="status-bar">Waiting for GPS...</div>
   <script>
@@ -179,6 +358,297 @@
     let markerRadius = 14;
     let stage, backgroundLayer, roadLayer, landmarkLayer, userLayer, routeLayer;
     let userMarker;
+    let currentScale = 1;
+    let destination = null;
+    let isSoundEnabled = true;
+    let lastDistanceAnnounced = null;
+    let lastInstructionAnnounced = null;
+    let speechSynthesis = window.speechSynthesis;
+    let lastSpokenTime = 0;
+    let heading = 0; // User's heading in degrees
+
+    // --- Performance optimization variables ---
+    let isPerformanceMode = false;
+    let lastUpdateTime = 0;
+    let updateInterval = 1000; // Default update interval (1 second)
+    let isUpdating = false;
+    let pendingUpdate = false;
+    let lastPosition = null;
+    let positionThreshold = 5; // meters
+
+    // --- Sound System ---
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function speakInstruction(text) {
+        if (!isSoundEnabled) return;
+        
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        // Get available voices and set a good one
+        const voices = speechSynthesis.getVoices();
+        const preferredVoice = voices.find(voice => 
+            voice.name.includes('Google') || 
+            voice.name.includes('Microsoft') || 
+            voice.name.includes('Samantha')
+        );
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+        }
+        
+        speechSynthesis.speak(utterance);
+    }
+
+    function getBearing(start, end) {
+        const toRad = deg => deg * Math.PI / 180;
+        const toDeg = rad => rad * 180 / Math.PI;
+        
+        const startLat = toRad(start.lat);
+        const startLng = toRad(start.lng);
+        const endLat = toRad(end.lat);
+        const endLng = toRad(end.lng);
+        
+        const y = Math.sin(endLng - startLng) * Math.cos(endLat);
+        const x = Math.cos(startLat) * Math.sin(endLat) -
+                 Math.sin(startLat) * Math.cos(endLat) * Math.cos(endLng - startLng);
+        let bearing = toDeg(Math.atan2(y, x));
+        return (bearing + 360) % 360;
+    }
+
+    function getDirectionFromBearing(bearing) {
+        const directions = [
+            { name: 'north', min: 337.5, max: 22.5 },
+            { name: 'northeast', min: 22.5, max: 67.5 },
+            { name: 'east', min: 67.5, max: 112.5 },
+            { name: 'southeast', min: 112.5, max: 157.5 },
+            { name: 'south', min: 157.5, max: 202.5 },
+            { name: 'southwest', min: 202.5, max: 247.5 },
+            { name: 'west', min: 247.5, max: 292.5 },
+            { name: 'northwest', min: 292.5, max: 337.5 }
+        ];
+        
+        return directions.find(dir => bearing >= dir.min && bearing < dir.max)?.name || 'north';
+    }
+
+    function getNavigationInstruction(userPos, destination, distance) {
+        if (distance <= 30) {
+            return "You have arrived at your destination";
+        }
+
+        const bearing = getBearing(userPos, destination);
+        const direction = getDirectionFromBearing(bearing);
+        const relativeBearing = (bearing - heading + 360) % 360;
+        
+        // Determine if we need to turn
+        let turnInstruction = '';
+        if (relativeBearing > 337.5 || relativeBearing <= 22.5) {
+            turnInstruction = 'Continue straight ahead';
+        } else if (relativeBearing > 22.5 && relativeBearing <= 67.5) {
+            turnInstruction = 'Turn slightly right';
+        } else if (relativeBearing > 67.5 && relativeBearing <= 112.5) {
+            turnInstruction = 'Turn right';
+        } else if (relativeBearing > 112.5 && relativeBearing <= 157.5) {
+            turnInstruction = 'Turn sharp right';
+        } else if (relativeBearing > 157.5 && relativeBearing <= 202.5) {
+            turnInstruction = 'Turn around';
+        } else if (relativeBearing > 202.5 && relativeBearing <= 247.5) {
+            turnInstruction = 'Turn sharp left';
+        } else if (relativeBearing > 247.5 && relativeBearing <= 292.5) {
+            turnInstruction = 'Turn left';
+        } else if (relativeBearing > 292.5 && relativeBearing <= 337.5) {
+            turnInstruction = 'Turn slightly left';
+        }
+
+        // Add distance information
+        let distancePhrase = '';
+        if (distance <= 100) {
+            distancePhrase = 'in 100 meters';
+        } else if (distance <= 500) {
+            distancePhrase = 'in 500 meters';
+        } else {
+            distancePhrase = `in ${Math.round(distance)} meters`;
+        }
+
+        return `${turnInstruction} ${distancePhrase}`;
+    }
+
+    // --- Throttle function ---
+    function throttle(func, limit) {
+      let inThrottle;
+      return function(...args) {
+        if (!inThrottle) {
+          func.apply(this, args);
+          inThrottle = true;
+          setTimeout(() => inThrottle = false, limit);
+        }
+      };
+    }
+
+    // --- Performance mode toggle ---
+    document.getElementById('performance-mode').onclick = function() {
+      isPerformanceMode = !isPerformanceMode;
+      this.textContent = `Performance Mode: ${isPerformanceMode ? 'On' : 'Off'}`;
+      updateInterval = isPerformanceMode ? 2000 : 1000; // 2 seconds in performance mode
+      positionThreshold = isPerformanceMode ? 10 : 5; // 10 meters in performance mode
+    };
+
+    // --- Show loading overlay ---
+    function showLoading() {
+      const overlay = document.getElementById('loading-overlay');
+      overlay.classList.add('active');
+    }
+
+    // --- Hide loading overlay ---
+    function hideLoading() {
+      const overlay = document.getElementById('loading-overlay');
+      overlay.classList.remove('active');
+    }
+
+    // --- Optimized map update ---
+    const updateMap = throttle(function() {
+      if (isUpdating) {
+        pendingUpdate = true;
+        return;
+      }
+
+      isUpdating = true;
+      showLoading();
+
+      requestAnimationFrame(() => {
+        if (!mapData) {
+          isUpdating = false;
+          hideLoading();
+          return;
+        }
+
+        const container = document.getElementById('container');
+        const width = Math.min(container.clientWidth || 320, window.innerWidth * 0.98);
+        const height = Math.min(500, width * 0.625);
+
+        // Only recreate stage if size changed
+        if (!stage || stage.width() !== width || stage.height() !== height) {
+          setupMap(mapData.center);
+        }
+
+        // Optimize layer updates
+        if (isPerformanceMode) {
+          // In performance mode, only update user marker and route
+          drawUserMarker(mapData.center, width, height);
+          drawDestinationMarker(mapData.center, width, height);
+          drawNavigationRoute(mapData.center, width, height);
+        } else {
+          // Normal mode - update all layers
+          drawRoads(mapData.center, width, height);
+          drawLandmarks(mapData.center, width, height);
+          drawUserMarker(mapData.center, width, height);
+          drawDestinationMarker(mapData.center, width, height);
+          drawNavigationRoute(mapData.center, width, height);
+        }
+
+        isUpdating = false;
+        hideLoading();
+
+        if (pendingUpdate) {
+          pendingUpdate = false;
+          updateMap();
+        }
+      });
+    }, 100);
+
+    // --- Optimized position update ---
+    function shouldUpdatePosition(newPos) {
+      if (!lastPosition) return true;
+      
+      const distance = haversineDistance(lastPosition, newPos);
+      return distance >= positionThreshold;
+    }
+
+    // --- Optimized navigation update ---
+    const updateNavigation = throttle(function() {
+      if (!navigationRoute || !userPos || !destination) return;
+      
+      const dist = haversineDistance(userPos, destination);
+      const instruction = getNavigationInstruction(userPos, destination, dist);
+      navInstruction = instruction;
+      
+      const notification = document.getElementById('nav-notification');
+      const distanceEl = document.getElementById('nav-distance');
+      const instructionEl = document.getElementById('nav-instruction');
+      
+      notification.classList.add('active', 'navigation');
+      distanceEl.textContent = `${Math.round(dist)} m`;
+      instructionEl.textContent = navInstruction;
+
+      // Speak instruction if it's new and enough time has passed
+      const now = Date.now();
+      if ((instruction !== lastInstructionAnnounced || 
+           Math.abs(dist - lastDistanceAnnounced) > 50) && 
+          now - lastSpokenTime > 3000) {
+        speakInstruction(instruction);
+        lastSpokenTime = now;
+        lastDistanceAnnounced = dist;
+        lastInstructionAnnounced = instruction;
+      }
+    }, 500);
+
+    // --- Get user location and generate map ---
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            heading = pos.coords.heading || 0;
+            lastPosition = userPos;
+            generateMap(userPos);
+            updateMap();
+            const bar = document.getElementById('status-bar');
+            bar.innerHTML = `<span style='color:#818cf8;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
+            bar.classList.remove('navigation');
+        }, function(err) {
+            document.getElementById('status-bar').textContent = 'Unable to get your location.';
+        }, { 
+            enableHighAccuracy: true, 
+            maximumAge: 0, 
+            timeout: 10000 
+        });
+
+        navigator.geolocation.watchPosition(function(pos) {
+            const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            
+            // Only update if position changed significantly
+            if (shouldUpdatePosition(newPos)) {
+                userPos = newPos;
+                heading = pos.coords.heading || heading;
+                lastPosition = newPos;
+                
+                if (destination) {
+                    navigationRoute = [userPos, destination];
+                    updateNavigation();
+                }
+                updateMap();
+            }
+        }, null, { 
+            enableHighAccuracy: true,
+            maximumAge: updateInterval,
+            timeout: 10000
+        });
+    } else {
+        document.getElementById('status-bar').textContent = 'Geolocation is not supported by your browser.';
+    }
+
+    // --- Sound Toggle ---
+    document.getElementById('sound-toggle').onclick = function() {
+        isSoundEnabled = !isSoundEnabled;
+        this.textContent = isSoundEnabled ? '🔊' : '🔇';
+        this.classList.toggle('muted');
+        
+        if (!isSoundEnabled) {
+            speechSynthesis.cancel();
+        }
+    };
 
     // Helper: Haversine distance in meters
     function haversineDistance(a, b) {
@@ -220,27 +690,49 @@
       container.innerHTML = '';
       const width = Math.min(container.clientWidth || 320, window.innerWidth * 0.98);
       const height = Math.min(500, width * 0.625);
-      stage = new Konva.Stage({ container: 'container', width, height });
-      backgroundLayer = new Konva.Layer();
-      roadLayer = new Konva.Layer();
-      landmarkLayer = new Konva.Layer();
-      userLayer = new Konva.Layer();
-      routeLayer = new Konva.Layer();
+      
+      // Destroy existing stage if it exists
+      if (stage) {
+        stage.destroy();
+      }
+
+      stage = new Konva.Stage({ 
+        container: 'container', 
+        width, 
+        height,
+        listening: false // Disable event listening for better performance
+      });
+
+      // Create layers with optimized settings
+      backgroundLayer = new Konva.Layer({ listening: false });
+      roadLayer = new Konva.Layer({ listening: false });
+      landmarkLayer = new Konva.Layer({ listening: false });
+      userLayer = new Konva.Layer({ listening: false });
+      routeLayer = new Konva.Layer({ listening: false });
+
       stage.add(backgroundLayer);
       stage.add(roadLayer);
       stage.add(landmarkLayer);
       stage.add(userLayer);
       stage.add(routeLayer);
+
       // Background
-      const bgRect = new Konva.Rect({ x: 0, y: 0, width, height, fill: '#e0e7ff' });
+      const bgRect = new Konva.Rect({ 
+        x: 0, 
+        y: 0, 
+        width, 
+        height, 
+        fill: '#e0e7ff',
+        listening: false
+      });
       backgroundLayer.add(bgRect);
       backgroundLayer.draw();
     }
 
     // --- Lat/lng to canvas ---
     function latLngToCanvas(lat, lng, center, width, height, scale = 10000) {
-      const x = width/2 + (lng - center.lng) * scale;
-      const y = height/2 - (lat - center.lat) * scale;
+      const x = width/2 + (lng - center.lng) * scale * currentScale;
+      const y = height/2 - (lat - center.lat) * scale * currentScale;
       return { x, y };
     }
 
@@ -303,6 +795,25 @@
       userLayer.draw();
     }
 
+    // --- Draw destination marker ---
+    function drawDestinationMarker(center, width, height) {
+      if (!destination) return;
+      const c = latLngToCanvas(destination.lat, destination.lng, center, width, height);
+      const marker = new Konva.Circle({
+        x: c.x,
+        y: c.y,
+        radius: markerRadius,
+        fill: '#ef4444',
+        stroke: '#fff',
+        strokeWidth: 4,
+        shadowBlur: 8,
+        shadowColor: '#ef4444',
+        listening: false
+      });
+      userLayer.add(marker);
+      userLayer.draw();
+    }
+
     // --- Draw navigation route ---
     function drawNavigationRoute(center, width, height) {
       routeLayer.destroyChildren();
@@ -326,19 +837,6 @@
       routeLayer.draw();
     }
 
-    // --- Update all layers ---
-    function updateMap() {
-      if (!mapData) return;
-      const container = document.getElementById('container');
-      const width = Math.min(container.clientWidth || 320, window.innerWidth * 0.98);
-      const height = Math.min(500, width * 0.625);
-      setupMap(mapData.center);
-      drawRoads(mapData.center, width, height);
-      drawLandmarks(mapData.center, width, height);
-      drawUserMarker(mapData.center, width, height);
-      drawNavigationRoute(mapData.center, width, height);
-    }
-
     // --- Generate map around user ---
     function generateMap(center) {
       // 3 roads
@@ -357,37 +855,42 @@
       mapData = { center, roads, landmarks };
     }
 
-    // --- Navigation logic ---
-    function updateNavigation() {
-      if (!navigationRoute || !userPos) return;
-      const dest = navigationRoute[navigationRoute.length - 1];
-      const dist = haversineDistance(userPos, dest);
-      let instruction = '';
-      if (dist > 30) {
-        instruction = `Go straight for ${Math.round(dist)} meters`;
-      } else {
-        instruction = 'You have arrived at your destination!';
-      }
-      navInstruction = instruction;
-      const bar = document.getElementById('status-bar');
-      bar.innerHTML = `<span style='color:#fff;font-weight:600;'>📍 NAVIGATION</span> | ${navInstruction}`;
-      bar.classList.add('navigation');
-    }
+    // --- Close navigation ---
+    document.getElementById('close-nav').onclick = function() {
+      const notification = document.getElementById('nav-notification');
+      notification.classList.remove('active', 'navigation');
+      navigationRoute = null;
+      destination = null;
+      lastDistanceAnnounced = null;
+      lastInstructionAnnounced = null;
+      updateMap();
+    };
 
-    // --- Show Navigation button ---
-    document.getElementById('show-nav-btn').onclick = function() {
-      if (!userPos || !mapData || !mapData.landmarks.length) return;
-      // Find nearest landmark
-      let minDist = Infinity, nearest = null;
-      for (const lm of mapData.landmarks) {
-        const d = haversineDistance(userPos, lm);
-        if (d < minDist) { minDist = d; nearest = lm; }
+    // --- Set destination ---
+    document.getElementById('set-destination-btn').onclick = function() {
+      const input = document.getElementById('destination-input').value;
+      const [lat, lng] = input.split(',').map(Number);
+      if (isNaN(lat) || isNaN(lng)) {
+        alert('Please enter valid coordinates (latitude,longitude)');
+        return;
       }
-      if (nearest) {
-        navigationRoute = [userPos, nearest];
+      destination = { lat, lng };
+      if (userPos) {
+        navigationRoute = [userPos, destination];
         updateNavigation();
         updateMap();
       }
+    };
+
+    // --- Zoom controls ---
+    document.getElementById('zoom-in').onclick = function() {
+      currentScale = Math.min(currentScale * 1.2, 3);
+      updateMap();
+    };
+
+    document.getElementById('zoom-out').onclick = function() {
+      currentScale = Math.max(currentScale / 1.2, 0.5);
+      updateMap();
     };
 
     // --- Marker size slider ---
@@ -397,33 +900,59 @@
       updateMap();
     };
 
-    // --- Get user location and generate map ---
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        generateMap(userPos);
-        updateMap();
-        document.getElementById('show-nav-btn').disabled = false;
-        const bar = document.getElementById('status-bar');
-        bar.innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
-        bar.classList.remove('navigation');
-      }, function(err) {
-        document.getElementById('status-bar').textContent = 'Unable to get your location.';
-      }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
-      navigator.geolocation.watchPosition(function(pos) {
-        userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        updateMap();
-        const bar = document.getElementById('status-bar');
-        if (navigationRoute) {
-          updateNavigation();
-        } else {
-          bar.innerHTML = `<span style='color:#4f46e5;font-weight:600;'>📍 LIVE</span> | Lat: ${userPos.lat.toFixed(5)}, Lng: ${userPos.lng.toFixed(5)}`;
-          bar.classList.remove('navigation');
+    // --- Load map data from localStorage or file ---
+    function renderLoadedMapData(data) {
+      try {
+        mapData = typeof data === 'string' ? JSON.parse(data) : data;
+        if (mapData.center === undefined && mapData.gpsOrigin) {
+          // Convert index.html export format to user2.html format
+          mapData.center = mapData.gpsOrigin;
         }
-      });
-    } else {
-      document.getElementById('status-bar').textContent = 'Geolocation is not supported by your browser.';
+        if (mapData.landmarks && mapData.landmarks.length && mapData.landmarks[0].type && !mapData.landmarks[0].emoji) {
+          // Add emoji for each landmark if missing
+          const emojiMap = {
+            house: '🏠', tree: '🌳', shop: '🏪', restaurant: '🍽️', school: '🏫', building: '🏢', hospital: '🏥', police: '🚓', cafe: '☕', pool: '🏊', toilet: '🚻', villa: '🏡', apartment: '🏬', church: '⛪', mosque: '🕌', synagogue: '🕍', bank: '🏦', fire: '🚒', pharmacy: '💊', parking: '🅿️'
+          };
+          mapData.landmarks.forEach(lm => { lm.emoji = emojiMap[lm.type] || '❓'; });
+        }
+        // If no center, fallback to first road/landmark
+        if (!mapData.center) {
+          if (mapData.roads && mapData.roads.length && mapData.roads[0].points && mapData.roads[0].points.length) {
+            mapData.center = mapData.roads[0].points[0];
+          } else if (mapData.landmarks && mapData.landmarks.length) {
+            mapData.center = { lat: mapData.landmarks[0].lat, lng: mapData.landmarks[0].lng };
+          } else {
+            mapData.center = { lat: 28.6139, lng: 77.2090 };
+          }
+        }
+        updateMap();
+      } catch (e) {
+        alert('Failed to load map data: ' + e.message);
+      }
     }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const uploadBtn = document.getElementById('upload-json-btn');
+      const fileInput = document.getElementById('json-file-input');
+      // Try to load from localStorage
+      const stored = localStorage.getItem('exportedMapData');
+      if (stored) {
+        renderLoadedMapData(stored);
+      } else {
+        // Show upload button
+        uploadBtn.style.display = 'inline-block';
+      }
+      uploadBtn.onclick = () => fileInput.click();
+      fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          renderLoadedMapData(evt.target.result);
+        };
+        reader.readAsText(file);
+      };
+    });
   </script>
 </body>
 </html> 
